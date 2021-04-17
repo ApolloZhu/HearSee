@@ -5,4 +5,9 @@
 //  Provides supporting functions for setting up a live view.
 //
 
+import UIKit
 import PlaygroundSupport
+
+public func getRealityViewController() -> UIViewController {
+    return RealityViewController()
+}
