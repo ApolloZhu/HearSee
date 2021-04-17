@@ -16,30 +16,12 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
-    //    let distanceCircles: [ModelEntity] = [
-    //        ModelEntity(mesh: .generateBox(size: 0.01), materials: [UnlitMaterial(color: .red)]),
-    //        ModelEntity(mesh: .generateBox(size: 0.035), materials: [UnlitMaterial(color: .green)]),
-    //        ModelEntity(mesh: .generateBox(size: 0.08), materials: [UnlitMaterial(color: .blue)]),
-    //    ]
-
     private var previousCenterAnchor: AnchorEntity?
-
-    private var raycast: ARTrackedRaycast? {
-        didSet {
-            oldValue?.stopTracking()
-        }
-    }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
         updateForConfigs()
         setupCoachingOverlay()
-
-        //        let cameraAnchor = AnchorEntity(.camera)       // ARCamera anchor
-        //        cameraAnchor.addChild(try! DistanceRings.loadScene().distanceRing!)
-        //        arView.scene.addAnchor(cameraAnchor)
-
-        arView.debugOptions.insert(.showStatistics)
 
         arView.session.delegate = self
         arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
@@ -71,64 +53,79 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         return model
     }
 
+    private var isUpdating = false
     private func updateRaycast() {
+        if isUpdating { return }
+        isUpdating = true
         guard let result = arView.raycast(from: arView.bounds.center,
                                           allowing: .estimatedPlane,
                                           alignment: .any).first
-        else { return }
-        func updateTextWithOrientation(_ orientation: Transform) {
-            previousCenterAnchor?.removeFromParent()
+        else { isUpdating = false; return }
+        let cameraTransform = arView.cameraTransform
+        let resultWorldPosition = result.worldTransform.position
+        let raycastDistance = distance(resultWorldPosition, cameraTransform.translation)
+        let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
+        let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
-            let raycastDistance = distance(result.worldTransform.position, arView.cameraTransform.translation)
+        func updateTextWithOrientation(_ orientation: Transform) {
             let textEntity = self.generateText(String(format: "%.1fm", raycastDistance), color: .systemPink)
             // 6. Scale the text depending on the distance,
             // such that it always appears with the same size on screen.
             textEntity.scale = .one * raycastDistance
 
             // 7. Place the text, facing the camera.
-            let rayDirection = normalize(result.worldTransform.position - arView.cameraTransform.translation)
-            let textPositionInWorldCoordinates = result.worldTransform.position - (rayDirection * 0.1)
+
             var finalTransform = orientation
             finalTransform.translation = textPositionInWorldCoordinates
             let textAnchor = AnchorEntity(world: finalTransform.matrix)
             textAnchor.addChild(textEntity)
+            previousCenterAnchor?.removeFromParent()
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
+            isUpdating = false
         }
 
-        nearbyFaceWithClassification(to: result.worldTransform.position) {
-            [weak self] surface in
+        // let minimumPlaneDistance = 1.2 as Float
+        // guard raycastDistance >= minimumPlaneDistance else {
+        //     updateTextWithOrientation(cameraTransform)
+        //     return
+        // }
+
+        nearbyFaceWithClassification(to: resultWorldPosition) { surface in
             DispatchQueue.main.async {
-                guard let self = self else { return }
-                if case let .some((faceTransform, classification)) = surface {
-                    let transform = Transform(matrix: faceTransform)
-    //                print(transform, self.arView.cameraTransform)
-                    updateTextWithOrientation(transform)
+                if case let .some((faceTransform, _ /*classification*/)) = surface {
+                    updateTextWithOrientation(Transform(matrix: faceTransform))
                 } else {
-                    updateTextWithOrientation(self.arView.cameraTransform)
+                    updateTextWithOrientation(cameraTransform)
                 }
             }
         }
     }
 
+    let myWorkQueue = DispatchQueue(label: "RealityViewController")
+
     func nearbyFaceWithClassification(to location: SIMD3<Float>,
                                       completionBlock: @escaping ((simd_float4x4, ARMeshClassification)?) -> Void) {
-        guard let frame = arView.session.currentFrame else {
+        guard let anchors = arView.session.currentFrame?.anchors else {
             completionBlock(nil)
             return
         }
 
-        var meshAnchors = frame.anchors.compactMap({ $0 as? ARMeshAnchor })
-
-        // Sort the mesh anchors by distance to the given location and filter out
-        // any anchors that are too far away (4 meters is a safe upper limit).
-        let cutoffDistance: Float = 4.0
-        meshAnchors.removeAll { distance($0.transform.position, location) > cutoffDistance }
-        meshAnchors.sort { distance($0.transform.position, location) < distance($1.transform.position, location) }
-
         // Perform the search asynchronously in order not to stall rendering.
-        DispatchQueue.global().async {
-            for anchor in meshAnchors {
+        myWorkQueue.async {
+            let cutoffDistance: Float = 4.0
+            let meshAnchors = anchors
+                .compactMap {
+                    ($0 as? ARMeshAnchor).map { anchor in
+                        (anchor: anchor, distance: distance(anchor.transform.position, location))
+                    }
+                }
+                // Sort the mesh anchors by distance to the given location and filter out
+                // any anchors that are too far away (4 meters is a safe upper limit).
+                .filter { $0.distance <= cutoffDistance }
+                .sorted { $0.distance < $1.distance }
+
+            for (anchor, _) in meshAnchors {
                 for index in 0..<anchor.geometry.faces.count {
                     // Get the center of the face so that we can compare it to the given location.
                     let geometricCenterOfFace = anchor.geometry.centerOf(faceWithIndex: index)
