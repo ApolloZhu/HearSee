@@ -8,6 +8,9 @@
 import UIKit
 import PlaygroundSupport
 
-public func getRealityViewController() -> UIViewController {
-    return RealityViewController()
+let viewController = RealityViewController()
+
+public func viewRealWorld(withDistanceMap showMesh: Bool) {
+    viewController.showMesh = showMesh
+    PlaygroundPage.current.setLiveView(viewController)
 }

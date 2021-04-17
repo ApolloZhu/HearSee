@@ -5,5 +5,9 @@
 //  Abstract:
 //  The Swift file containing the source code edited by the user of this playground book.
 //
+
+import BookCore
+
 //#-end-hidden-code
-let str = "Hello, playground"
+
+viewRealWorld(withDistanceMap: /*#-editable-code see more than what you see?*/false/*#-end-editable-code*/)

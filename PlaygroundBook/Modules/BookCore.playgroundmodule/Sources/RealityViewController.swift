@@ -12,25 +12,30 @@ import RealityKit
 public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
     public var showMesh: Bool = false {
         didSet {
-            if showMesh {
-                arView.debugOptions.insert(.showSceneUnderstanding)
-            } else {
-                arView.debugOptions.remove(.showSceneUnderstanding)
-            }
+            updateForConfigs()
         }
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+        updateForConfigs()
+        setupCoachingOverlay()
+
         arView.session.delegate = self
         arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
-        showMesh = true
-
         arView.automaticallyConfigureSession = false
         let configuration = ARWorldTrackingConfiguration()
         configuration.sceneReconstruction = .meshWithClassification
         configuration.environmentTexturing = .automatic
         arView.session.run(configuration)
+    }
+
+    private func updateForConfigs() {
+        if showMesh {
+            arView.debugOptions.insert(.showSceneUnderstanding)
+        } else {
+            arView.debugOptions.remove(.showSceneUnderstanding)
+        }
     }
 
     // MARK: - Coaching
@@ -93,17 +98,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         return view as! ARView
     }
     public override func loadView() {
-        self.view = ARView()
-    }
-
-    public override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        UIApplication.shared.isIdleTimerDisabled = true
-    }
-
-    public override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        UIApplication.shared.isIdleTimerDisabled = false
+        self.view = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
     }
 
     public override var prefersHomeIndicatorAutoHidden: Bool {
