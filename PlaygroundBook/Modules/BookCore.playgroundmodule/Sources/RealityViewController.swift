@@ -36,7 +36,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
 
     var cache: [String: ModelEntity] = [:]
 
-    func generateText(_ text: String, color: UIColor) -> ModelEntity {
+    func generateText(_ text: String, color: () -> UIColor) -> ModelEntity {
         if let model = cache[text] {
             model.transform = .identity
             return model.clone(recursive: true)
@@ -45,7 +45,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         let lineHeight: CGFloat = 0.05
         let font = MeshResource.Font.systemFont(ofSize: lineHeight)
         let textMesh = MeshResource.generateText(text, extrusionDepth: Float(lineHeight * 0.1), font: font)
-        let textMaterial = UnlitMaterial(color: color)
+        let textMaterial = UnlitMaterial(color: color())
         let model = ModelEntity(mesh: textMesh, materials: [textMaterial])
         // Move text geometry to the left so that its local origin is in the center
         model.position.x -= model.visualBounds(relativeTo: nil).extents.x / 2
@@ -67,8 +67,21 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
+
         func updateTextWithOrientation(_ orientation: Transform) {
-            let textEntity = self.generateText(String(format: "%.1fm", raycastDistance), color: .systemPink)
+            let textEntity = self.generateText(
+                String(format: "%.1fm", raycastDistance),
+                color: {
+                    switch raycastDistance {
+                    case ...1.4: return UIColor.systemRed
+                    case ...1.875: return UIColor.systemOrange
+                    case ...2.75: return UIColor.systemGreen
+                    case ...3.125: return UIColor.systemTeal
+                    case ...3.75: return UIColor.systemBlue
+                    default: return UIColor.systemIndigo // ~5 min
+                    }
+                }
+            )
             // 6. Scale the text depending on the distance,
             // such that it always appears with the same size on screen.
             textEntity.scale = .one * raycastDistance
