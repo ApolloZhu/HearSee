@@ -23,6 +23,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
 
         arView.session.delegate = self
         arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
+        arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
         arView.automaticallyConfigureSession = false
         let configuration = ARWorldTrackingConfiguration()
         configuration.sceneReconstruction = .meshWithClassification
