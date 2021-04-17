@@ -10,7 +10,12 @@ import ARKit
 import RealityKit
 
 public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
-    public var showMesh: Bool = false {
+
+    internal struct State {
+        var showMesh: Bool = true
+        var showDistance: Bool = true
+    }
+    internal var state: State = State() {
         didSet {
             updateForConfigs()
         }
@@ -55,7 +60,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
 
     private var isUpdating = false
     private func updateRaycast() {
-        if isUpdating { return }
+        if isUpdating || !state.showDistance { return }
         isUpdating = true
         guard let result = arView.raycast(from: arView.bounds.center,
                                           allowing: .estimatedPlane,
@@ -107,7 +112,9 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         nearbyFaceWithClassification(to: resultWorldPosition) { surface in
             DispatchQueue.main.async {
                 if case let .some((faceTransform, _ /*classification*/)) = surface {
-                    updateTextWithOrientation(Transform(matrix: faceTransform))
+                    let transform = Transform(matrix: faceTransform)
+                    // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
+                    updateTextWithOrientation(transform)
                 } else {
                     updateTextWithOrientation(cameraTransform)
                 }
@@ -170,10 +177,14 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     }
 
     private func updateForConfigs() {
-        if showMesh {
+        if state.showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
         } else {
             arView.debugOptions.remove(.showSceneUnderstanding)
+        }
+
+        if !state.showDistance {
+            previousCenterAnchor?.removeFromParent()
         }
     }
 
@@ -219,6 +230,15 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             coachingOverlay.widthAnchor.constraint(equalTo: view.widthAnchor),
             coachingOverlay.heightAnchor.constraint(equalTo: view.heightAnchor)
         ])
+    }
+
+    private var previousState: State?
+    public func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
+        previousState = state
+    }
+
+    public func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
+        state = previousState ?? State()
     }
 
     public func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {

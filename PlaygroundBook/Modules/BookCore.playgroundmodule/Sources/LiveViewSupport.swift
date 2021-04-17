@@ -8,8 +8,25 @@
 import UIKit
 import PlaygroundSupport
 
-public func viewRealWorld(withDistanceMap showMesh: Bool) {
+public func getRealWorldView(
+    withDistanceMeasurement showDistance: Bool = true,
+    withDistanceMap showMesh: Bool = true
+) -> RealityViewController {
     let viewController = RealityViewController()
-    viewController.showMesh = showMesh
-    PlaygroundPage.current.setLiveView(viewController)
+    viewController.state = .init(
+        showMesh: showMesh,
+        showDistance: showDistance
+    )
+    return viewController
+}
+
+public func viewRealWorld(
+    withDistanceMeasurement showDistance: Bool,
+    withDistanceMap showMesh: Bool
+) {
+
+    PlaygroundPage.current.setLiveView(getRealWorldView(
+        withDistanceMeasurement: showDistance,
+        withDistanceMap: showMesh
+    ))
 }
