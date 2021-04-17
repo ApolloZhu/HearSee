@@ -24,6 +24,7 @@
 		5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF2F9AD2054BBF300191409 /* LiveViewController.swift */; };
 		5EF2F9B72054E6FB00191409 /* Chapters in Copy Book Contents */ = {isa = PBXBuildFile; fileRef = 5EF2F9B62054E6F900191409 /* Chapters */; };
 		D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FB82262A8D3700AFA178 /* RealityViewController.swift */; };
+		D222FBBD262AAD9700AFA178 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -161,6 +162,7 @@
 		5EF2F9AD2054BBF300191409 /* LiveViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewController.swift; sourceTree = "<group>"; };
 		5EF2F9B62054E6F900191409 /* Chapters */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Chapters; sourceTree = "<group>"; };
 		D222FB82262A8D3700AFA178 /* RealityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealityViewController.swift; sourceTree = "<group>"; };
+		D222FBBC262AAD9700AFA178 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -309,6 +311,7 @@
 				5EF2F9AD2054BBF300191409 /* LiveViewController.swift */,
 				5E3196F22061DEA40077BBD7 /* LiveViewSupport.swift */,
 				D222FB82262A8D3700AFA178 /* RealityViewController.swift */,
+				D222FBBC262AAD9700AFA178 /* Extensions.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -608,6 +611,7 @@
 				D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */,
 				5E3196F32061DEA40077BBD7 /* LiveViewSupport.swift in Sources */,
 				5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */,
+				D222FBBD262AAD9700AFA178 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
