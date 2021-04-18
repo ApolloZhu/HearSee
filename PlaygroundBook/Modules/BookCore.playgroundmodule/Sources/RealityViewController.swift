@@ -22,23 +22,6 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        setupCoachingOverlay()
-        updateForConfigs()
-
-        arView.session.delegate = self
-        arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
-        arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
-        arView.automaticallyConfigureSession = false
-
-        let configuration = ARWorldTrackingConfiguration()
-        configuration.sceneReconstruction = .meshWithClassification
-        configuration.environmentTexturing = .automatic
-        configuration.planeDetection = [.horizontal, .vertical]
-        arView.session.run(configuration)
-    }
-
     //    private lazy var minDistanceAnchor: AnchorEntity = {
     //        let entity = AnchorEntity(world: [0, 0, 0])
     //        let pin = try! Experience.loadPin().pin!
@@ -96,7 +79,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             isUpdating = false
         }
 
-        processAllAnchors(centerWorldPosition: resultWorldPosition) { result in
+        processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
             var distances = [ARMeshClassification.none: raycastDistance]
             if let result = result {
                 distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters }, uniquingKeysWith: min)
@@ -105,6 +88,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
                     #warning("TODO: make sure text have same orientation as surface")
                     // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
                     DispatchQueue.main.async {
+//                        self?.updateCategorizedAnchors(result.minDistanceToCamera)
                         updateTextWithOrientation(transform)
                     }
                 } else {
@@ -117,15 +101,19 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
                     updateTextWithOrientation(cameraTransform)
                 }
             }
-            self.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
-            self.state.didReceiveMinDistanceFromCamera(distances)
+            DispatchQueue.main.async {
+                self?.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
+                self?.state.didReceiveMinDistanceFromCamera(distances)
+            }
         }
     }
 
-    public func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        updateRaycast()
-    }
-
+//    func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
+//        for (classification, point) in distances {
+//            let anchor = self.anchor(forClassification: classification)
+//            anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
+//        }
+//    }
 
     private struct AnchorSummary {
         let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
@@ -203,6 +191,27 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
+    // MARK: - Life Cycle
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCoachingOverlay()
+        updateForConfigs()
+
+        arView.session.delegate = self
+        // arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
+        arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
+        arView.automaticallyConfigureSession = false
+
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.sceneReconstruction = .meshWithClassification
+        configuration.environmentTexturing = .automatic
+        configuration.planeDetection = [.horizontal, .vertical]
+        arView.session.run(configuration)
+    }
+
+    public func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        updateRaycast()
+    }
 
     private func updateForConfigs() {
         if !state.showDistance {
@@ -241,6 +250,19 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     internal var _cache: [String: ModelEntity] = [:]
     internal let _myWorkQueue = DispatchQueue(label: "RealityViewController")
     internal let coachingOverlay = ARCoachingOverlayView()
+
+//    private var _anchorCache: [ARMeshClassification: AnchorEntity] = [:]
+//    func anchor(forClassification classification: ARMeshClassification) -> AnchorEntity {
+//        if let anchor = _anchorCache[classification] {
+//            return anchor
+//        } else {
+//            let anchor = AnchorEntity()
+//            _anchorCache[classification] = anchor
+//            arView.scene.addAnchor(anchor)
+//            anchor.playAudio(try! AudioFileResource.load(named: "80s Back Beat 02.caf", shouldLoop: true))
+//            return anchor
+//        }
+//    }
 
     var arView: ARView {
         return view as! ARView
