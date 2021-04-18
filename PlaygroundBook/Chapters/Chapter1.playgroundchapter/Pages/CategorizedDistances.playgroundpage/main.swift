@@ -22,38 +22,38 @@ viewRealWorld(
             // for walls, only warns if is too close (25 centimeters).
             case .wall:
                 if distance < 0.25 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter from wall")
+                    return say("\(distance, decimalPlaces: 1) meter from wall")
                 }
             // for example, someone into aviation could use some jargons.
             case .floor:
                 if distance < 0.4 /* meter */ {
-                    return speak("terrain, terrain; pull up, pull up")
+                    return say("terrain, terrain; pull up, pull up")
                 } else if distance < 0.7 /* meter */ {
-                    return speak("caution: terrain")
+                    return say("caution: terrain")
                 }
             case .ceiling:
                 if distance < 0.25 /* meter */ {
-                    return speak("cruising altitude")
+                    return say("cruising altitude")
                 }
             case .table:
                 if distance < 0.4 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter from table")
+                    return say("\(distance, decimalPlaces: 1) meter from table")
                 }
             case .seat:
                 if distance < 0.4 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter from seats")
+                    return say("\(distance, decimalPlaces: 1) meter from seats")
                 }
             case .window:
                 if distance < 0.25 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter from window")
+                    return say("\(distance, decimalPlaces: 1) meter from window")
                 }
             case .door:
                 if distance < 0.3 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter from door")
+                    return say("\(distance, decimalPlaces: 1) meter from door")
                 }
             case .none:
                 if distance < 0.4 /* meter */ {
-                    return speak("\(distance, decimalPlaces: 1) meter")
+                    return say("\(distance, decimalPlaces: 1) meter")
                 }
             @unknown default:
                 break  // otherwise, we don't know what's going on

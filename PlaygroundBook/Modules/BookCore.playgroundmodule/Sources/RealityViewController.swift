@@ -39,13 +39,13 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         arView.session.run(configuration)
     }
 
-//    private lazy var minDistanceAnchor: AnchorEntity = {
-//        let entity = AnchorEntity(world: [0, 0, 0])
-//        let pin = try! Experience.loadPin().pin!
-//        entity.addChild(pin)
-//        arView.scene.addAnchor(entity)
-//        return entity
-//    }()
+    //    private lazy var minDistanceAnchor: AnchorEntity = {
+    //        let entity = AnchorEntity(world: [0, 0, 0])
+    //        let pin = try! Experience.loadPin().pin!
+    //        entity.addChild(pin)
+    //        arView.scene.addAnchor(entity)
+    //        return entity
+    //    }()
     private var previousCenterAnchor: AnchorEntity?
     private var isUpdating = false
     private func updateRaycast() {
@@ -83,12 +83,16 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             // 7. Place the text, facing the transform.
             var finalTransform = orientation
             finalTransform.translation = textPositionInWorldCoordinates
-            let textAnchor = AnchorEntity(world: finalTransform.matrix)
-            textAnchor.addChild(textEntity, preservingWorldTransform: true)
-            previousCenterAnchor?.removeFromParent()
-            arView.scene.addAnchor(textAnchor)
-            previousCenterAnchor = textAnchor
-            state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
+            if let anchor = previousCenterAnchor {
+                anchor.children.forEach { $0.removeFromParent() }
+                anchor.setTransformMatrix(finalTransform.matrix, relativeTo: nil)
+            } else {
+                let textAnchor = AnchorEntity(world: finalTransform.matrix)
+                arView.scene.addAnchor(textAnchor)
+                previousCenterAnchor = textAnchor
+            }
+
+            previousCenterAnchor!.addChild(textEntity)
             isUpdating = false
         }
 
@@ -113,6 +117,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
                     updateTextWithOrientation(cameraTransform)
                 }
             }
+            self.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
             self.state.didReceiveMinDistanceFromCamera(distances)
         }
     }

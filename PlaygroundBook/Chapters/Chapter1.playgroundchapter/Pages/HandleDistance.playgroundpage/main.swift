@@ -19,11 +19,11 @@ viewRealWorld(
         //#-editable-code what will you do with this new power?
         switch distance {
         case ..<0.5: /* meters */
-            speak("watch out!")
+            say("watch out!")
         case ..<2: /* meters */
-            speak("\(distance, decimalPlaces: 1) meter")
+            say("\(distance, decimalPlaces: 1) meter")
         default: /* otherwise, >= 2 meters */
-            speak("\(distance, decimalPlaces: 1) meters")
+            say("\(distance, decimalPlaces: 1) meters")
         }
         //#-end-editable-code
     }

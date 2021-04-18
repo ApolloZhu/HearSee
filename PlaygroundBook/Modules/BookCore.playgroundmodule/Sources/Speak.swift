@@ -20,7 +20,7 @@ public let _synthesizer = AVSpeechSynthesizer()
 
 #warning("TODO: offer UI for changing voice")
 private var speakCache: String? = nil
-public func speak(
+public func say(
     _ text: String,
     using voice: AVSpeechSynthesisVoice? = nil,
     stopPrevious: Bool = true
