@@ -11,10 +11,10 @@ import RealityKit
 
 public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
     internal struct State {
-        var showMesh: Bool = true
-        var showDistance: Bool = true
-        var didReceiveDistanceFromCenterToWorld: (Float) -> Void = { _ in }
-        var didReceiveMinDistanceToCamera: (Float) -> Void = { _ in }
+        var showMesh: Bool = false
+        var showDistance: Bool = false
+        var didReceiveDistanceFromCameraToPointInWorldAtCenterOfView: (Float) -> Void = { _ in }
+        var didReceiveMinDistanceFromCamera: ([ARMeshClassification: Float]) -> Void = { _ in }
     }
     internal var state: State = State() {
         didSet {
@@ -25,20 +25,27 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupCoachingOverlay()
+        updateForConfigs()
+
         arView.session.delegate = self
         arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
         arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
         arView.automaticallyConfigureSession = false
-        updateForConfigs()
+
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.sceneReconstruction = .meshWithClassification
+        configuration.environmentTexturing = .automatic
+        configuration.planeDetection = [.horizontal, .vertical]
+        arView.session.run(configuration)
     }
 
-    private lazy var minDistanceAnchor: AnchorEntity = {
-        let entity = AnchorEntity(world: [0, 0, 0])
-        let pin = try! Experience.loadPin().pin!
-        entity.addChild(pin)
-        arView.scene.addAnchor(entity)
-        return entity
-    }()
+//    private lazy var minDistanceAnchor: AnchorEntity = {
+//        let entity = AnchorEntity(world: [0, 0, 0])
+//        let pin = try! Experience.loadPin().pin!
+//        entity.addChild(pin)
+//        arView.scene.addAnchor(entity)
+//        return entity
+//    }()
     private var previousCenterAnchor: AnchorEntity?
     private var isUpdating = false
     private func updateRaycast() {
@@ -81,44 +88,32 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             previousCenterAnchor?.removeFromParent()
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
-            state.didReceiveDistanceFromCenterToWorld(raycastDistance)
+            state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
             isUpdating = false
         }
 
-        guard state.showMesh else {
-            updateTextWithOrientation(cameraTransform)
-            return
-        }
-
         processAllAnchors(centerWorldPosition: resultWorldPosition) { result in
-            DispatchQueue.main.async {
-                if let result = result {
-                    //                    self.previousMinAnchor?.removeFromParent()
-                    //                    let anchor = AnchorEntity(world: result.minDistanceToCameraAnchor.transform.position)
-                    //                    let pin = try! Experience.loadPin().pin!
-                    //                    anchor.addChild(pin)
-                    //                    self.previousMinAnchor = anchor
-                    if let center = result.center {
-                        let transform = Transform(matrix: center.worldTransform)
-                        #warning("TODO: make sure text have same orientation as surface")
-                        // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
+            var distances = [ARMeshClassification.none: raycastDistance]
+            if let result = result {
+                distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters }, uniquingKeysWith: min)
+                if let center = result.center {
+                    let transform = Transform(matrix: center.worldTransform)
+                    #warning("TODO: make sure text have same orientation as surface")
+                    // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
+                    DispatchQueue.main.async {
                         updateTextWithOrientation(transform)
-                    } else {
+                    }
+                } else {
+                    DispatchQueue.main.async {
                         updateTextWithOrientation(cameraTransform)
                     }
-                    let minClassification = result.minDistanceToCamera.classification
-                    let type: String = minClassification == .none
-                        ? ""
-                        : minClassification.description
-                    let distance = result.minDistanceToCamera.inMeters
-                    if distance < 0.5 {
-                        speak("\(type) \(distance, decimalPlaces: 1) meter")
-                    }
-                    self.minDistanceAnchor.transform = Transform(matrix: result.minDistanceToCamera.worldTransform)
-                } else {
+                }
+            } else {
+                DispatchQueue.main.async {
                     updateTextWithOrientation(cameraTransform)
                 }
             }
+            self.state.didReceiveMinDistanceFromCamera(distances)
         }
     }
 
@@ -129,7 +124,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
 
     private struct AnchorSummary {
         let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
-        let minDistanceToCamera: (inMeters: Float, worldTransform: simd_float4x4, classification: ARMeshClassification)
+        let minDistanceToCamera: [ARMeshClassification: (inMeters: Float, worldTransform: simd_float4x4)]
     }
     private func processAllAnchors(
         centerWorldPosition location: SIMD3<Float>,
@@ -148,10 +143,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             var poiWorldTransform: simd_float4x4? = nil
             var poiClassification: ARMeshClassification = .none
 
-            var minDistanceToCamera: Float? = nil
-            var minDistanceToCameraWorldTransform: simd_float4x4? = nil
-            var minDistanceToCameraClassification: ARMeshClassification = .none
-
+            var minDistanceToCamera: [ARMeshClassification: (inMeters: Float, worldTransform: simd_float4x4)] = [:]
 
             // Use O(n) instead O(n log n) sorting so processing anchors are faster
             for case let anchor as ARMeshAnchor in anchors {
@@ -186,24 +178,22 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
                     }
 
                     // closest point shall not be about floors
-                    guard classification != .floor else { continue }
+                    let minDistanceToCameraForCurrentClassification = minDistanceToCamera[classification]
                     let pointDistanceToCamera = distance(centerWorldPosition, cameraTransform.matrix.position)
-                    if minDistanceToCamera == nil || pointDistanceToCamera < minDistanceToCamera! {
-                        minDistanceToCameraWorldTransform = centerWorldTransform
-                        minDistanceToCamera = pointDistanceToCamera
-                        minDistanceToCameraClassification = classification
+
+                    if minDistanceToCameraForCurrentClassification == nil
+                        || pointDistanceToCamera < minDistanceToCameraForCurrentClassification!.inMeters {
+                        minDistanceToCamera[classification] = (pointDistanceToCamera, centerWorldTransform)
                     }
                 }
             }
-            guard let anchor = minDistanceToCameraWorldTransform,
-                  let distance = minDistanceToCamera
-            else {
+            guard !minDistanceToCamera.isEmpty else {
                 return completionBlock(nil)
             }
 
             completionBlock(.init(
                 center: poiWorldTransform.map { (worldTransform: $0, classification: poiClassification) },
-                minDistanceToCamera: (inMeters: distance, worldTransform: anchor, classification: minDistanceToCameraClassification)
+                minDistanceToCamera: minDistanceToCamera
             ))
         }
     }
@@ -214,22 +204,18 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             previousCenterAnchor?.removeFromParent()
         }
 
-        let configuration = ARWorldTrackingConfiguration()
         if state.showMesh {
-            configuration.sceneReconstruction = .meshWithClassification
             arView.debugOptions.insert(.showSceneUnderstanding)
         } else {
             arView.debugOptions.remove(.showSceneUnderstanding)
         }
-        configuration.environmentTexturing = .automatic
-        configuration.planeDetection = [.horizontal, .vertical]
-        arView.session.run(configuration)
     }
 
     // MARK: - Coaching
     private var previousState: State?
     public func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
         previousState = state
+        state = State()
     }
 
     public func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {

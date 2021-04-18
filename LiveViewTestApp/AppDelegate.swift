@@ -21,8 +21,50 @@ class AppDelegate: LiveViewHost.AppDelegate {
         // changing the implementation of the `liveViewConfiguration` property below.
         return getRealWorldView(
             withDistanceMap: true,
-            withDistanceMeasurement: true
-        )
+            withDistanceMeasurement: true,
+            onReceiveCategorizedDistanceUpdate:  { distances in
+                for (category, distance) in distances.sorted(by: { $0.value < $1.value }) {
+                    switch category {
+                    case .wall:
+                        if distance < 0.25 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter from wall")
+                        }
+                    case .floor:
+                        // aviation warning when about to hit the ground
+                        if distance < 0.4 /* meter */ {
+                            return speak("terrain, terrain; pull up, pull up")
+                        } else if distance < 0.7 /* meter */ {
+                            return speak("caution: terrain")
+                        }
+                    case .ceiling:
+                        if distance < 0.25 /* meter */ {
+                            return speak("cruising altitude")
+                        }
+                    case .table:
+                        if distance < 0.4 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter from table")
+                        }
+                    case .seat:
+                        if distance < 0.4 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter from seats")
+                        }
+                    case .window:
+                        if distance < 0.25 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter from window")
+                        }
+                    case .door:
+                        if distance < 0.3 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter from door")
+                        }
+                    case .none:
+                        if distance < 0.4 /* meter */ {
+                            return speak("\(distance, decimalPlaces: 1) meter")
+                        }
+                    @unknown default:
+                        break  // hmmm, what could this be?
+                    }
+                }
+            })
     }
 
     override var liveViewConfiguration: LiveViewConfiguration {

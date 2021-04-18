@@ -8,6 +8,7 @@
 	<array>
 		<string>Measure.playgroundpage</string>
 		<string>HandleDistance.playgroundpage</string>
+		<string>CategorizedDistances.playgroundpage</string>
 	</array>
 </dict>
 </plist>
