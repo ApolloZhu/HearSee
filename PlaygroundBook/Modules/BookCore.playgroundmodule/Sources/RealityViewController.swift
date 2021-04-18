@@ -18,7 +18,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     }
     internal var state: State = State() {
         didSet {
-            updateForConfigs()
+            DispatchQueue.main.async(execute: updateForConfigs)
         }
     }
 
@@ -34,17 +34,19 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     private func updateRaycast() {
         if isUpdating || !state.showDistance { return }
         isUpdating = true
-        guard let result = arView.raycast(from: arView.bounds.center,
+        guard let raycastResult = arView.raycast(from: arView.bounds.center,
                                           allowing: .estimatedPlane,
                                           alignment: .any).first
         else { isUpdating = false; return }
+
         let cameraTransform = arView.cameraTransform
-        let resultWorldPosition = result.worldTransform.position
+        let resultWorldPosition = raycastResult.worldTransform.position
         let raycastDistance = distance(resultWorldPosition, cameraTransform.translation)
         let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
         func updateTextWithOrientation(_ orientation: Transform) {
+//            return
             #warning("TODO: remove X before submission")
             let textEntity = self.generateText(
                 String(format: "%.1fm\(orientation == cameraTransform ? "X" : "")", raycastDistance),
@@ -66,21 +68,22 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             // 7. Place the text, facing the transform.
             var finalTransform = orientation
             finalTransform.translation = textPositionInWorldCoordinates
-            if let anchor = previousCenterAnchor {
-                anchor.children.forEach { $0.removeFromParent() }
-                anchor.setTransformMatrix(finalTransform.matrix, relativeTo: nil)
-            } else {
-                let textAnchor = AnchorEntity(world: finalTransform.matrix)
-                arView.scene.addAnchor(textAnchor)
-                previousCenterAnchor = textAnchor
-            }
-
-            previousCenterAnchor!.addChild(textEntity)
+            let textAnchor = AnchorEntity(world: finalTransform.matrix)
+            textAnchor.addChild(textEntity)
+            previousCenterAnchor?.removeFromParent()
+            arView.scene.addAnchor(textAnchor)
+            previousCenterAnchor = textAnchor
             isUpdating = false
         }
 
         processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
-            var distances = [ARMeshClassification.none: raycastDistance]
+            var distances: [ARMeshClassification: Float]
+            if let anchor = raycastResult.anchor,
+               let planeAnchor = anchor as? ARPlaneAnchor {
+                distances = [.init(planeAnchor.classification): raycastDistance]
+            } else {
+                distances = [.none: raycastDistance]
+            }
             if let result = result {
                 distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters }, uniquingKeysWith: min)
                 if let center = result.center {
