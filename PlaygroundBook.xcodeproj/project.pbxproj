@@ -25,6 +25,7 @@
 		5EF2F9B72054E6FB00191409 /* Chapters in Copy Book Contents */ = {isa = PBXBuildFile; fileRef = 5EF2F9B62054E6F900191409 /* Chapters */; };
 		D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FB82262A8D3700AFA178 /* RealityViewController.swift */; };
 		D222FBBD262AAD9700AFA178 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* Extensions.swift */; };
+		D222FC2E262BD2AE00AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -163,6 +164,7 @@
 		5EF2F9B62054E6F900191409 /* Chapters */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Chapters; sourceTree = "<group>"; };
 		D222FB82262A8D3700AFA178 /* RealityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealityViewController.swift; sourceTree = "<group>"; };
 		D222FBBC262AAD9700AFA178 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		D222FC28262BD09400AFA178 /* Speak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Speak.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -283,6 +285,7 @@
 		5E6F7E5B2367B632008CC191 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D222FC28262BD09400AFA178 /* Speak.swift */,
 				5E6F7E5C2367B64A008CC191 /* BookAPI.swift */,
 			);
 			path = Sources;
@@ -584,6 +587,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D222FC2E262BD2AE00AFA178 /* Speak.swift in Sources */,
 				5E6F7E6C2368FC01008CC191 /* BookAPI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -9,24 +9,27 @@ import UIKit
 import PlaygroundSupport
 
 public func getRealWorldView(
+    withDistanceMap showMesh: Bool = true,
     withDistanceMeasurement showDistance: Bool = true,
-    withDistanceMap showMesh: Bool = true
+    onReceiveDistanceUpdate processDistance: @escaping (Float) -> Void = { _ in }
 ) -> RealityViewController {
     let viewController = RealityViewController()
     viewController.state = .init(
         showMesh: showMesh,
-        showDistance: showDistance
+        showDistance: showDistance,
+        didReceiveDistanceFromCenterToWorld: processDistance
     )
     return viewController
 }
 
 public func viewRealWorld(
+    withDistanceMap showMesh: Bool,
     withDistanceMeasurement showDistance: Bool,
-    withDistanceMap showMesh: Bool
+    onReceiveDistanceUpdate processDistance: @escaping (Float) -> Void = { _ in }
 ) {
-
     PlaygroundPage.current.setLiveView(getRealWorldView(
+        withDistanceMap: showMesh,
         withDistanceMeasurement: showDistance,
-        withDistanceMap: showMesh
+        onReceiveDistanceUpdate: processDistance
     ))
 }

@@ -19,7 +19,10 @@ class AppDelegate: LiveViewHost.AppDelegate {
         // The view or view controller returned from this method will be automatically be shown on screen,
         // as if it were a live view in Swift Playgrounds. You can control how the live view is shown by
         // changing the implementation of the `liveViewConfiguration` property below.
-        return getRealWorldView(withDistanceMeasurement: true, withDistanceMap: true)
+        return getRealWorldView(
+            withDistanceMap: true,
+            withDistanceMeasurement: true
+        )
     }
 
     override var liveViewConfiguration: LiveViewConfiguration {

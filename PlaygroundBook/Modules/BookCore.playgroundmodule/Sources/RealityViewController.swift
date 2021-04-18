@@ -10,10 +10,10 @@ import ARKit
 import RealityKit
 
 public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
-
     internal struct State {
         var showMesh: Bool = true
         var showDistance: Bool = true
+        var didReceiveDistanceFromCenterToWorld: (Float) -> Void = { _ in }
     }
     internal var state: State = State() {
         didSet {
@@ -39,9 +39,9 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         arView.session.run(configuration)
     }
 
-    var cache: [String: ModelEntity] = [:]
+    private var cache: [String: ModelEntity] = [:]
 
-    func generateText(_ text: String, color: () -> UIColor) -> ModelEntity {
+    private func generateText(_ text: String, color: () -> UIColor) -> ModelEntity {
         if let model = cache[text] {
             model.transform = .identity
             return model.clone(recursive: true)
@@ -100,19 +100,20 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             previousCenterAnchor?.removeFromParent()
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
+            state.didReceiveDistanceFromCenterToWorld(raycastDistance)
             isUpdating = false
         }
 
-        // let minimumPlaneDistance = 1.2 as Float
-        // guard raycastDistance >= minimumPlaneDistance else {
-        //     updateTextWithOrientation(cameraTransform)
-        //     return
-        // }
+        guard state.showMesh else {
+            updateTextWithOrientation(cameraTransform)
+            return
+        }
 
         nearbyFaceWithClassification(to: resultWorldPosition) { surface in
             DispatchQueue.main.async {
                 if case let .some((faceTransform, _ /*classification*/)) = surface {
                     let transform = Transform(matrix: faceTransform)
+                    #warning("TODO: make sure text faces the camera more")
                     // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
                     updateTextWithOrientation(transform)
                 } else {
@@ -122,10 +123,12 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
-    let myWorkQueue = DispatchQueue(label: "RealityViewController")
+    private let myWorkQueue = DispatchQueue(label: "RealityViewController")
 
-    func nearbyFaceWithClassification(to location: SIMD3<Float>,
-                                      completionBlock: @escaping ((simd_float4x4, ARMeshClassification)?) -> Void) {
+    private func nearbyFaceWithClassification(
+        to location: SIMD3<Float>,
+        completionBlock: @escaping ((simd_float4x4, ARMeshClassification)?) -> Void
+    ) {
         guard let anchors = arView.session.currentFrame?.anchors else {
             completionBlock(nil)
             return

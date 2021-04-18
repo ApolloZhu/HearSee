@@ -1,3 +1,13 @@
+# Hear See
+
+Technologies
+
+- RealityKit
+- ARKit
+- AVFoundation - AVSpeechSynthesizer
+- StringInterpolation
+
+
 #  Playground Book Xcode Project #
 
 ## Overview ##

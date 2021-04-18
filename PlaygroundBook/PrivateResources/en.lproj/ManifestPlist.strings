@@ -9,7 +9,9 @@ Contains English localizations of values in Manifest.plist files in the playgrou
 "PlaygroundBookName" = "Hear See";
 
 /* The localized name of the first chapter in the playground book. */
-"ChapterOneName" = "See the World Through Light";
+"ChapterOneName" = "Light DA Road";
 
 /* The localized name of the first page in the first chapter in the playground book. */
-"ChapterOnePageOneName" = "LiDAR";
+"ChapterOnePageOneName" = "See the World Through Light";
+
+"ChapterOnePageTwoName" = "Distant Distance?";

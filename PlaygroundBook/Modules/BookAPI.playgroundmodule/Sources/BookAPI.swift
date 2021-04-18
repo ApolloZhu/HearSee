@@ -14,3 +14,13 @@ import BookCore
 //
 // This is controlled via the book-level `UserAutoImportedAuxiliaryModules`
 // Manifest.plist key.
+
+import Foundation
+
+extension String.StringInterpolation {
+    public mutating func appendInterpolation(_ float: Float, decimalPlaces: Int) {
+        let formatter = NumberFormatter()
+        formatter.maximumFractionDigits = decimalPlaces
+        appendLiteral(formatter.string(from: NSNumber(value: float))!)
+    }
+}
