@@ -24,8 +24,12 @@
 		5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF2F9AD2054BBF300191409 /* LiveViewController.swift */; };
 		5EF2F9B72054E6FB00191409 /* Chapters in Copy Book Contents */ = {isa = PBXBuildFile; fileRef = 5EF2F9B62054E6F900191409 /* Chapters */; };
 		D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FB82262A8D3700AFA178 /* RealityViewController.swift */; };
-		D222FBBD262AAD9700AFA178 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* Extensions.swift */; };
-		D222FC2E262BD2AE00AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
+		D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */; };
+		D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC53262BE14F00AFA178 /* Helpers.swift */; };
+		D222FC62262BEC1300AFA178 /* Experience.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC61262BEC1300AFA178 /* Experience.swift */; };
+		D222FC7A262BF03A00AFA178 /* Experience.reality in Resources */ = {isa = PBXBuildFile; fileRef = D222FC79262BF03A00AFA178 /* Experience.reality */; };
+		D222FC7B262BF03A00AFA178 /* Experience.reality in Resources */ = {isa = PBXBuildFile; fileRef = D222FC79262BF03A00AFA178 /* Experience.reality */; };
+		D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -163,8 +167,11 @@
 		5EF2F9AD2054BBF300191409 /* LiveViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewController.swift; sourceTree = "<group>"; };
 		5EF2F9B62054E6F900191409 /* Chapters */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Chapters; sourceTree = "<group>"; };
 		D222FB82262A8D3700AFA178 /* RealityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealityViewController.swift; sourceTree = "<group>"; };
-		D222FBBC262AAD9700AFA178 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSampleCode.swift; sourceTree = "<group>"; };
 		D222FC28262BD09400AFA178 /* Speak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Speak.swift; sourceTree = "<group>"; };
+		D222FC53262BE14F00AFA178 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		D222FC61262BEC1300AFA178 /* Experience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Experience.swift; sourceTree = "<group>"; };
+		D222FC79262BF03A00AFA178 /* Experience.reality */ = {isa = PBXFileReference; lastKnownFileType = file; path = Experience.reality; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -285,7 +292,6 @@
 		5E6F7E5B2367B632008CC191 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				D222FC28262BD09400AFA178 /* Speak.swift */,
 				5E6F7E5C2367B64A008CC191 /* BookAPI.swift */,
 			);
 			path = Sources;
@@ -314,7 +320,10 @@
 				5EF2F9AD2054BBF300191409 /* LiveViewController.swift */,
 				5E3196F22061DEA40077BBD7 /* LiveViewSupport.swift */,
 				D222FB82262A8D3700AFA178 /* RealityViewController.swift */,
-				D222FBBC262AAD9700AFA178 /* Extensions.swift */,
+				D222FC61262BEC1300AFA178 /* Experience.swift */,
+				D222FC53262BE14F00AFA178 /* Helpers.swift */,
+				D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */,
+				D222FC28262BD09400AFA178 /* Speak.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -384,6 +393,7 @@
 			isa = PBXGroup;
 			children = (
 				5EF2F97E2054B6E400191409 /* ManifestPlist.strings */,
+				D222FC79262BF03A00AFA178 /* Experience.reality */,
 				5E551EC42371FC3F00784365 /* Assets.xcassets */,
 			);
 			path = PrivateResources;
@@ -550,6 +560,7 @@
 			files = (
 				5EF2F97C2054B6E400191409 /* ManifestPlist.strings in Resources */,
 				5E551EC52371FC3F00784365 /* Assets.xcassets in Resources */,
+				D222FC7A262BF03A00AFA178 /* Experience.reality in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -557,6 +568,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D222FC7B262BF03A00AFA178 /* Experience.reality in Resources */,
 				5EA2E3CA2056F35B00416A35 /* LiveViewTestAppLaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -587,7 +599,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D222FC2E262BD2AE00AFA178 /* Speak.swift in Sources */,
 				5E6F7E6C2368FC01008CC191 /* BookAPI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -613,9 +624,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */,
+				D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */,
 				5E3196F32061DEA40077BBD7 /* LiveViewSupport.swift in Sources */,
+				D222FC62262BEC1300AFA178 /* Experience.swift in Sources */,
 				5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */,
-				D222FBBD262AAD9700AFA178 /* Extensions.swift in Sources */,
+				D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */,
+				D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

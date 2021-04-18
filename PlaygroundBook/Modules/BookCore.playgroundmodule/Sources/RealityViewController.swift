@@ -14,6 +14,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         var showMesh: Bool = true
         var showDistance: Bool = true
         var didReceiveDistanceFromCenterToWorld: (Float) -> Void = { _ in }
+        var didReceiveMinDistanceToCamera: (Float) -> Void = { _ in }
     }
     internal var state: State = State() {
         didSet {
@@ -21,43 +22,24 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
-    private var previousCenterAnchor: AnchorEntity?
-
     public override func viewDidLoad() {
         super.viewDidLoad()
-        updateForConfigs()
         setupCoachingOverlay()
-
         arView.session.delegate = self
         arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
         arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
         arView.automaticallyConfigureSession = false
-        let configuration = ARWorldTrackingConfiguration()
-        configuration.sceneReconstruction = .meshWithClassification
-        configuration.environmentTexturing = .automatic
-        configuration.planeDetection = [.horizontal, .vertical]
-        arView.session.run(configuration)
+        updateForConfigs()
     }
 
-    private var cache: [String: ModelEntity] = [:]
-
-    private func generateText(_ text: String, color: () -> UIColor) -> ModelEntity {
-        if let model = cache[text] {
-            model.transform = .identity
-            return model.clone(recursive: true)
-        }
-
-        let lineHeight: CGFloat = 0.05
-        let font = MeshResource.Font.systemFont(ofSize: lineHeight)
-        let textMesh = MeshResource.generateText(text, extrusionDepth: Float(lineHeight * 0.1), font: font)
-        let textMaterial = UnlitMaterial(color: color())
-        let model = ModelEntity(mesh: textMesh, materials: [textMaterial])
-        // Move text geometry to the left so that its local origin is in the center
-        model.position.x -= model.visualBounds(relativeTo: nil).extents.x / 2
-        cache[text] = model
-        return model
-    }
-
+    private lazy var minDistanceAnchor: AnchorEntity = {
+        let entity = AnchorEntity(world: [0, 0, 0])
+        let pin = try! Experience.loadPin().pin!
+        entity.addChild(pin)
+        arView.scene.addAnchor(entity)
+        return entity
+    }()
+    private var previousCenterAnchor: AnchorEntity?
     private var isUpdating = false
     private func updateRaycast() {
         if isUpdating || !state.showDistance { return }
@@ -72,10 +54,10 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
-
         func updateTextWithOrientation(_ orientation: Transform) {
+            #warning("TODO: remove X before submission")
             let textEntity = self.generateText(
-                String(format: "%.1fm", raycastDistance),
+                String(format: "%.1fm\(orientation == cameraTransform ? "X" : "")", raycastDistance),
                 color: {
                     switch raycastDistance {
                     case ...1.4: return UIColor.systemRed
@@ -83,7 +65,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
                     case ...2.75: return UIColor.systemGreen
                     case ...3.125: return UIColor.systemTeal
                     case ...3.75: return UIColor.systemBlue
-                    default: return UIColor.systemIndigo // ~5 min
+                    default: return UIColor.systemIndigo // ~5 meters
                     }
                 }
             )
@@ -91,12 +73,11 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             // such that it always appears with the same size on screen.
             textEntity.scale = .one * raycastDistance
 
-            // 7. Place the text, facing the camera.
-
+            // 7. Place the text, facing the transform.
             var finalTransform = orientation
             finalTransform.translation = textPositionInWorldCoordinates
             let textAnchor = AnchorEntity(world: finalTransform.matrix)
-            textAnchor.addChild(textEntity)
+            textAnchor.addChild(textEntity, preservingWorldTransform: true)
             previousCenterAnchor?.removeFromParent()
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
@@ -109,13 +90,31 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
             return
         }
 
-        nearbyFaceWithClassification(to: resultWorldPosition) { surface in
+        processAllAnchors(centerWorldPosition: resultWorldPosition) { result in
             DispatchQueue.main.async {
-                if case let .some((faceTransform, _ /*classification*/)) = surface {
-                    let transform = Transform(matrix: faceTransform)
-                    #warning("TODO: make sure text faces the camera more")
-                    // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
-                    updateTextWithOrientation(transform)
+                if let result = result {
+                    //                    self.previousMinAnchor?.removeFromParent()
+                    //                    let anchor = AnchorEntity(world: result.minDistanceToCameraAnchor.transform.position)
+                    //                    let pin = try! Experience.loadPin().pin!
+                    //                    anchor.addChild(pin)
+                    //                    self.previousMinAnchor = anchor
+                    if let center = result.center {
+                        let transform = Transform(matrix: center.worldTransform)
+                        #warning("TODO: make sure text have same orientation as surface")
+                        // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
+                        updateTextWithOrientation(transform)
+                    } else {
+                        updateTextWithOrientation(cameraTransform)
+                    }
+                    let minClassification = result.minDistanceToCamera.classification
+                    let type: String = minClassification == .none
+                        ? ""
+                        : minClassification.description
+                    let distance = result.minDistanceToCamera.inMeters
+                    if distance < 0.5 {
+                        speak("\(type) \(distance, decimalPlaces: 1) meter")
+                    }
+                    self.minDistanceAnchor.transform = Transform(matrix: result.minDistanceToCamera.worldTransform)
                 } else {
                     updateTextWithOrientation(cameraTransform)
                 }
@@ -123,118 +122,111 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
     }
 
-    private let myWorkQueue = DispatchQueue(label: "RealityViewController")
+    public func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        updateRaycast()
+    }
 
-    private func nearbyFaceWithClassification(
-        to location: SIMD3<Float>,
-        completionBlock: @escaping ((simd_float4x4, ARMeshClassification)?) -> Void
+
+    private struct AnchorSummary {
+        let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
+        let minDistanceToCamera: (inMeters: Float, worldTransform: simd_float4x4, classification: ARMeshClassification)
+    }
+    private func processAllAnchors(
+        centerWorldPosition location: SIMD3<Float>,
+        completionBlock: @escaping (AnchorSummary?) -> Void
     ) {
         guard let anchors = arView.session.currentFrame?.anchors else {
-            completionBlock(nil)
-            return
+            return completionBlock(nil)
         }
+        let cameraTransform = arView.cameraTransform
 
         // Perform the search asynchronously in order not to stall rendering.
-        myWorkQueue.async {
-            let cutoffDistance: Float = 4.0
-            let meshAnchors = anchors
-                .compactMap {
-                    ($0 as? ARMeshAnchor).map { anchor in
-                        (anchor: anchor, distance: distance(anchor.transform.position, location))
-                    }
-                }
-                // Sort the mesh anchors by distance to the given location and filter out
-                // any anchors that are too far away (4 meters is a safe upper limit).
-                .filter { $0.distance <= cutoffDistance }
-                .sorted { $0.distance < $1.distance }
+        _myWorkQueue.async {
+            let centerPointCutoffDistance: Float = 4.0
 
-            for (anchor, _) in meshAnchors {
+            var minDistanceToPOI: Float? = nil
+            var poiWorldTransform: simd_float4x4? = nil
+            var poiClassification: ARMeshClassification = .none
+
+            var minDistanceToCamera: Float? = nil
+            var minDistanceToCameraWorldTransform: simd_float4x4? = nil
+            var minDistanceToCameraClassification: ARMeshClassification = .none
+
+
+            // Use O(n) instead O(n log n) sorting so processing anchors are faster
+            for case let anchor as ARMeshAnchor in anchors {
+                let distanceToPOI = distance(anchor.transform.position, location)
+                guard distanceToPOI < centerPointCutoffDistance else { continue }
+
                 for index in 0..<anchor.geometry.faces.count {
                     // Get the center of the face so that we can compare it to the given location.
                     let geometricCenterOfFace = anchor.geometry.centerOf(faceWithIndex: index)
 
                     // Convert the face's center to world coordinates.
                     var centerLocalTransform = matrix_identity_float4x4
-                    centerLocalTransform.columns.3 = SIMD4<Float>(geometricCenterOfFace.0, geometricCenterOfFace.1, geometricCenterOfFace.2, 1)
+                    centerLocalTransform.columns.3 = SIMD4<Float>(
+                        geometricCenterOfFace.0,
+                        geometricCenterOfFace.1,
+                        geometricCenterOfFace.2,
+                        1
+                    )
                     let centerWorldTransform = anchor.transform * centerLocalTransform
                     let centerWorldPosition = centerWorldTransform.position
 
                     // We're interested in a classification that is sufficiently close to the given location––within 5 cm.
                     let distanceToFace = distance(centerWorldPosition, location)
+                    let classification = anchor.geometry.classificationOf(faceWithIndex: index)
                     if distanceToFace <= 0.05 {
-                        // Get the semantic classification of the face and finish the search.
-                        let classification = anchor.geometry.classificationOf(faceWithIndex: index)
-                        completionBlock((centerWorldTransform, classification))
-                        return
+                        if minDistanceToPOI == nil || distanceToPOI < minDistanceToPOI! {
+                            minDistanceToPOI = distanceToPOI
+                            // Get the semantic classification of the face and finish the search.
+                            poiClassification = classification
+                            poiWorldTransform = centerWorldTransform
+                        }
+                    }
+
+                    // closest point shall not be about floors
+                    guard classification != .floor else { continue }
+                    let pointDistanceToCamera = distance(centerWorldPosition, cameraTransform.matrix.position)
+                    if minDistanceToCamera == nil || pointDistanceToCamera < minDistanceToCamera! {
+                        minDistanceToCameraWorldTransform = centerWorldTransform
+                        minDistanceToCamera = pointDistanceToCamera
+                        minDistanceToCameraClassification = classification
                     }
                 }
             }
+            guard let anchor = minDistanceToCameraWorldTransform,
+                  let distance = minDistanceToCamera
+            else {
+                return completionBlock(nil)
+            }
 
-            // Let the completion block know that no result was found.
-            completionBlock(nil)
+            completionBlock(.init(
+                center: poiWorldTransform.map { (worldTransform: $0, classification: poiClassification) },
+                minDistanceToCamera: (inMeters: distance, worldTransform: anchor, classification: minDistanceToCameraClassification)
+            ))
         }
     }
 
-    public func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        updateRaycast()
-    }
 
     private func updateForConfigs() {
+        if !state.showDistance {
+            previousCenterAnchor?.removeFromParent()
+        }
+
+        let configuration = ARWorldTrackingConfiguration()
         if state.showMesh {
+            configuration.sceneReconstruction = .meshWithClassification
             arView.debugOptions.insert(.showSceneUnderstanding)
         } else {
             arView.debugOptions.remove(.showSceneUnderstanding)
         }
-
-        if !state.showDistance {
-            previousCenterAnchor?.removeFromParent()
-        }
+        configuration.environmentTexturing = .automatic
+        configuration.planeDetection = [.horizontal, .vertical]
+        arView.session.run(configuration)
     }
 
     // MARK: - Coaching
-
-    public func session(_ session: ARSession, didFailWithError error: Error) {
-        guard error is ARError else { return }
-        let errorWithInfo = error as NSError
-        let messages = [
-            errorWithInfo.localizedDescription,
-            errorWithInfo.localizedFailureReason,
-            errorWithInfo.localizedRecoverySuggestion
-        ]
-        let errorMessage = messages.compactMap { $0 }.joined(separator: "\n")
-        DispatchQueue.main.async { [weak self] in
-            let alertController = UIAlertController(title: "The AR session failed.",
-                                                    message: errorMessage,
-                                                    preferredStyle: .alert)
-            let restartAction = UIAlertAction(title: "Restart Session",
-                                              style: .default) {
-                [weak self] _ in
-                alertController.dismiss(animated: true, completion: nil)
-                self?.resetARSession()
-            }
-            alertController.addAction(restartAction)
-            self?.present(alertController, animated: true, completion: nil)
-        }
-    }
-
-    let coachingOverlay = ARCoachingOverlayView()
-
-    func setupCoachingOverlay() {
-        // Set up coaching view
-        coachingOverlay.session = arView.session
-        coachingOverlay.delegate = self
-
-        coachingOverlay.translatesAutoresizingMaskIntoConstraints = false
-        arView.addSubview(coachingOverlay)
-
-        NSLayoutConstraint.activate([
-            coachingOverlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            coachingOverlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            coachingOverlay.widthAnchor.constraint(equalTo: view.widthAnchor),
-            coachingOverlay.heightAnchor.constraint(equalTo: view.heightAnchor)
-        ])
-    }
-
     private var previousState: State?
     public func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
         previousState = state
@@ -255,12 +247,17 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     }
 
     // MARK: - Helpers
+    internal var _cache: [String: ModelEntity] = [:]
+    internal let _myWorkQueue = DispatchQueue(label: "RealityViewController")
+    internal let coachingOverlay = ARCoachingOverlayView()
 
     var arView: ARView {
         return view as! ARView
     }
+
     public override func loadView() {
-        self.view = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
+        self.view = ARView(frame: .zero, cameraMode: .ar,
+                           automaticallyConfigureSession: false)
     }
 
     public override var prefersHomeIndicatorAutoHidden: Bool {
