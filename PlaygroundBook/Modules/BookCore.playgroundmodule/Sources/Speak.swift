@@ -64,7 +64,3 @@ public class EnglishSpeaker: ObservableObject {
     public static let inCharge = EnglishSpeaker()
     private init() { }
 }
-
-public func say(_ text: String, stopPrevious: Bool = true) {
-    EnglishSpeaker.inCharge.speak(text, stopPrevious: stopPrevious)
-}

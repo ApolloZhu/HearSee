@@ -6,24 +6,25 @@
 //  The Swift file containing the source code edited by the user of this playground book.
 //
 
-import UserModule
 import BookCore
 import ARKit
 import RealityKit
 
+//#-code-completion(module, hide, BookCore)
+
 //#-end-hidden-code
 
 /*:
- # Hear See
+ # 😎 Hear See
 
- Well, certainly having someone speak out when we are close to some obstacles are helpful, but what if, we can know exactly where we could potential hit, without seeing it?
+ Well, certainly having someone speak out when we are close to some obstacles are helpful, but what if, we can know where exactly we could potential hit, without necessarily seeing it?
 
- Since we already have the depth data of the surroundings, we could:
+ Since we already have the depth data of the surroundings, in addition to our existing code in `handleDistances`, we could:
 
  1. locate the point that's closet us, and keep track of it;
  2. play, with spatial audio, a sound track from that point
 
- With these steps, you'll be able to hear where the nearest obstacle is, and thus navigate the space without bumping into anything.
+ With these steps, it's possible to hear the nearest obstacle, and thus navigate the space without bumping into anything.
  */
 
 viewRealWorld(
@@ -46,9 +47,9 @@ viewRealWorld(
     }
 )
 
-//: - Experiment: That was fun, but you could try additional customizations for the nearest location marker.
+/*:
+ - Experiment: That was fun, but you could try additional customizations for the nearest location marker.
 
-/*: - Example:
  You could use [Reality Composer](https://developer.apple.com/augmented-reality/tools/) to design a different marker shape, or just generate a simple spherical one using the code below (to replace `model`):
 
  ```swift

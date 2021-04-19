@@ -21,7 +21,7 @@ class AppDelegate: LiveViewHost.AppDelegate {
         // The view or view controller returned from this method will be automatically be shown on screen,
         // as if it were a live view in Swift Playgrounds. You can control how the live view is shown by
         // changing the implementation of the `liveViewConfiguration` property below.
-        return getRealWorldView(
+        return _getRealWorldView(
             withDistanceMap: true,
             withDistanceMeasurement: true,
             onReceiveCategorizedDistanceUpdate:  { distances in
@@ -70,6 +70,7 @@ class AppDelegate: LiveViewHost.AppDelegate {
             },
             markerForNearestPoint: {
                 let entity = AnchorEntity()
+                entity.name = "Hello"
                 // let mesh = MeshResource.generateSphere(radius: 0.05)
                 // let material = SimpleMaterial(color: #colorLiteral(red: 0.4, green: 0.8, blue: 1, alpha: 1), isMetallic: false)
                 // let model = ModelEntity(mesh: mesh, materials: [material])
@@ -79,7 +80,8 @@ class AppDelegate: LiveViewHost.AppDelegate {
                                                              inputMode: .spatial,
                                                              shouldLoop: true))
                 return entity
-            })
+            }
+        )
     }
 
     override var liveViewConfiguration: LiveViewConfiguration {

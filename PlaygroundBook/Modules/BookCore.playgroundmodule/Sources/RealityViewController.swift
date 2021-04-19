@@ -249,9 +249,14 @@ public class RealityViewController: UIViewController,
         minDistanceAnchor.stopAllAudio()
         minDistanceAnchor.stopAllAnimations(recursive: true)
         minDistanceAnchor.removeFromParent()
-        if !noHandleMinDistances {
-            minDistanceAnchor = state.anchorEntityForMinDistanceFromCamera()
+
+        // workaround for background music
+        let newAnchor = state.anchorEntityForMinDistanceFromCamera()
+        if !noHandleMinDistances || newAnchor.name == ._backgroundMusicAnchorName {
+            minDistanceAnchor = newAnchor
             arView.scene.addAnchor(minDistanceAnchor)
+        } else {
+            newAnchor.stopAllAudio()
         }
 
         if state.showMesh {

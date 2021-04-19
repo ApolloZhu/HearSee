@@ -73,12 +73,6 @@ extension simd_float4x4 {
     }
 }
 
-func assert(_ predicate: Bool, _ message: String) {
-    if !predicate {
-        say(message)
-    }
-}
-
 extension ARMeshGeometry {
     func vertex(at index: UInt32) -> (Float, Float, Float) {
         assert(vertices.format == MTLVertexFormat.float3, "Expected three floats (twelve bytes) per vertex.")

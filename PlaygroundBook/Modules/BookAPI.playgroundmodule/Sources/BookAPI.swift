@@ -14,3 +14,7 @@ import BookCore
 //
 // This is controlled via the book-level `UserAutoImportedAuxiliaryModules`
 // Manifest.plist key.
+
+public func say(_ text: String, stopPrevious: Bool = true) {
+    EnglishSpeaker.inCharge.speak(text, stopPrevious: stopPrevious)
+}

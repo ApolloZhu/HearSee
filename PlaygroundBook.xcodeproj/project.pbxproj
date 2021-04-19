@@ -26,7 +26,6 @@
 		D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FB82262A8D3700AFA178 /* RealityViewController.swift */; };
 		D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */; };
 		D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC53262BE14F00AFA178 /* Helpers.swift */; };
-		D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
 		D222FD45262D61D100AFA178 /* TechnicalNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */; };
 		D222FD46262D61D100AFA178 /* Notice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD1B262D596F00AFA178 /* Notice.swift */; };
 		D222FD50262D7D0700AFA178 /* HUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD4F262D7D0700AFA178 /* HUD.swift */; };
@@ -37,6 +36,9 @@
 		D222FD7B262D9FEE00AFA178 /* Clock Cartoon.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD78262D9FEE00AFA178 /* Clock Cartoon.caf */; };
 		D222FD7C262D9FEE00AFA178 /* Clock Cartoon.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD78262D9FEE00AFA178 /* Clock Cartoon.caf */; };
 		D222FD8A262DA03D00AFA178 /* Experience.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC61262BEC1300AFA178 /* Experience.swift */; };
+		D26324A9262E3F8B002C9D55 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
+		D26324AE262E4001002C9D55 /* BookAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6F7E5C2367B64A008CC191 /* BookAPI.swift */; };
+		D26324BD262E4CF8002C9D55 /* Cover.png in Resources */ = {isa = PBXBuildFile; fileRef = D26324BC262E4CF8002C9D55 /* Cover.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -184,6 +186,7 @@
 		D222FD59262D7F0E00AFA178 /* Afloat Pad.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Afloat Pad.caf"; sourceTree = "<group>"; };
 		D222FD77262D9FEE00AFA178 /* Experience.reality */ = {isa = PBXFileReference; lastKnownFileType = file; path = Experience.reality; sourceTree = "<group>"; };
 		D222FD78262D9FEE00AFA178 /* Clock Cartoon.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Clock Cartoon.caf"; sourceTree = "<group>"; };
+		D26324BC262E4CF8002C9D55 /* Cover.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Cover.png; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -237,6 +240,7 @@
 				5E086DCF2051DF0F004D8D25 /* Manifest.plist */,
 				5E70679B23678D810094BDEF /* Modules */,
 				5E7067A023678DED0094BDEF /* UserModules */,
+				D26324BB262E4CE6002C9D55 /* Resources */,
 				D222FD76262D9FEE00AFA178 /* PublicResources */,
 				5EF2F9792054B64800191409 /* PrivateResources */,
 				5EF2F9B62054E6F900191409 /* Chapters */,
@@ -333,8 +337,8 @@
 				5E3196F22061DEA40077BBD7 /* LiveViewSupport.swift */,
 				D222FB82262A8D3700AFA178 /* RealityViewController.swift */,
 				D222FD4F262D7D0700AFA178 /* HUD.swift */,
-				D222FC28262BD09400AFA178 /* Speak.swift */,
 				D222FC61262BEC1300AFA178 /* Experience.swift */,
+				D222FC28262BD09400AFA178 /* Speak.swift */,
 				D222FC53262BE14F00AFA178 /* Helpers.swift */,
 				D222FD1B262D596F00AFA178 /* Notice.swift */,
 				D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */,
@@ -431,6 +435,14 @@
 				D222FD78262D9FEE00AFA178 /* Clock Cartoon.caf */,
 			);
 			path = PublicResources;
+			sourceTree = "<group>";
+		};
+		D26324BB262E4CE6002C9D55 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D26324BC262E4CF8002C9D55 /* Cover.png */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -584,6 +596,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5EF2F97C2054B6E400191409 /* ManifestPlist.strings in Resources */,
+				D26324BD262E4CF8002C9D55 /* Cover.png in Resources */,
 				D222FD5A262D7F0E00AFA178 /* Afloat Pad.caf in Resources */,
 				D222FD7B262D9FEE00AFA178 /* Clock Cartoon.caf in Resources */,
 				D222FD79262D9FEE00AFA178 /* Experience.reality in Resources */,
@@ -645,6 +658,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5EA2E3C02056F35A00416A35 /* AppDelegate.swift in Sources */,
+				D26324AE262E4001002C9D55 /* BookAPI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -654,11 +668,11 @@
 			files = (
 				D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */,
 				D222FD50262D7D0700AFA178 /* HUD.swift in Sources */,
-				D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */,
 				D222FD8A262DA03D00AFA178 /* Experience.swift in Sources */,
 				5E3196F32061DEA40077BBD7 /* LiveViewSupport.swift in Sources */,
 				D222FD46262D61D100AFA178 /* Notice.swift in Sources */,
 				5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */,
+				D26324A9262E3F8B002C9D55 /* Speak.swift in Sources */,
 				D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */,
 				D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */,
 				D222FD45262D61D100AFA178 /* TechnicalNote.swift in Sources */,
