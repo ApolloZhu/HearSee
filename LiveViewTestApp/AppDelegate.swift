@@ -25,16 +25,17 @@ class AppDelegate: LiveViewHost.AppDelegate {
             onReceiveCategorizedDistanceUpdate:  { distances in
                 for (category, distance) in distances.sorted(by: { $0.value < $1.value }) {
                     switch category {
+                    // for walls, only warns if is too close (25 centimeters).
                     case .wall:
-                        if distance < 0.25 /* meter */ {
+                        if distance < 0.3 /* meter */ {
                             return say("\(distance, decimalPlaces: 1) meter from wall")
                         }
+                    // for example, someone into aviation could use some jargons.
                     case .floor:
-                        // aviation warning when about to hit the ground
                         if distance < 0.4 /* meter */ {
                             return say("terrain, terrain; pull up, pull up")
                         } else if distance < 0.7 /* meter */ {
-                            return say("caution: terrain")
+                            return say("caution: terrain; caution: terrain;")
                         }
                     case .ceiling:
                         if distance < 0.25 /* meter */ {
@@ -61,7 +62,7 @@ class AppDelegate: LiveViewHost.AppDelegate {
                             return say("\(distance, decimalPlaces: 1) meter")
                         }
                     @unknown default:
-                        break  // hmmm, what could this be?
+                        break  // otherwise, we don't know what's going on
                     }
                 }
             })

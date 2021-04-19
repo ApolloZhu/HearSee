@@ -139,12 +139,10 @@ public class RealityViewController: UIViewController,
     private var previousCenterAnchor: AnchorEntity?
     private var isUpdating = false
     private func updateRaycast() {
-        if isUpdating || !state.showDistance { return }
-        isUpdating = true
         guard let raycastResult = arView.raycast(from: arView.bounds.center,
                                                  allowing: .estimatedPlane,
                                                  alignment: .any).first
-        else { isUpdating = false; return }
+        else { return }
 
         let cameraTransform = arView.cameraTransform
         let resultWorldPosition = raycastResult.worldTransform.position
@@ -179,31 +177,34 @@ public class RealityViewController: UIViewController,
             var distances = _anchorSummary?.minDistanceToCamera.mapValues { $0.inMeters } ?? [:]
             distances[raycastPlaneClassification ?? .none] = raycastDistance
             state.didReceiveMinDistanceFromCamera?(distances)
-            isUpdating = false
         }
 
-        processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
-            let raycastClassification = raycastPlaneClassification
-                ?? result?.center?.classification
-                ?? .none
-            var distances = [raycastClassification: raycastDistance]
-            let newSummary: AnchorSummary
-            if let result = result {
-                distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters },
-                                uniquingKeysWith: min)
-                newSummary = result
-            } else {
-                newSummary = AnchorSummary(
-                    center: nil,
-                    minDistanceToCamera: [
-                        raycastClassification : (inMeters: raycastDistance,
-                                                 worldTransform: raycastResult.worldTransform)
-                    ]
-                )
-            }
-            DispatchQueue.main.async {
-                self?._anchorSummary = newSummary
-                self?.state.didReceiveMinDistanceFromCamera?(distances)
+        if !isUpdating && state.showDistance {
+            isUpdating = true
+            processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
+                let raycastClassification = raycastPlaneClassification
+                    ?? result?.center?.classification
+                    ?? .none
+                var distances = [raycastClassification: raycastDistance]
+                let newSummary: AnchorSummary
+                if let result = result {
+                    distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters },
+                                    uniquingKeysWith: min)
+                    newSummary = result
+                } else {
+                    newSummary = AnchorSummary(
+                        center: nil,
+                        minDistanceToCamera: [
+                            raycastClassification : (inMeters: raycastDistance,
+                                                     worldTransform: raycastResult.worldTransform)
+                        ]
+                    )
+                }
+                DispatchQueue.main.async {
+                    self?._anchorSummary = newSummary
+                    self?.isUpdating = false
+                    self?.state.didReceiveMinDistanceFromCamera?(distances)
+                }
             }
         }
         updateTextWithOrientation()
