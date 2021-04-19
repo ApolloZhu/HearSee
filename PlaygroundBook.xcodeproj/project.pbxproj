@@ -30,6 +30,11 @@
 		D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
 		D222FD45262D61D100AFA178 /* TechnicalNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */; };
 		D222FD46262D61D100AFA178 /* Notice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD1B262D596F00AFA178 /* Notice.swift */; };
+		D222FD50262D7D0700AFA178 /* HUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD4F262D7D0700AFA178 /* HUD.swift */; };
+		D222FD5A262D7F0E00AFA178 /* Afloat Pad.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD59262D7F0E00AFA178 /* Afloat Pad.caf */; };
+		D222FD5B262D7F0E00AFA178 /* Afloat Pad.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD59262D7F0E00AFA178 /* Afloat Pad.caf */; };
+		D222FD61262D7FF600AFA178 /* Clock Cartoon.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD60262D7FF600AFA178 /* Clock Cartoon.caf */; };
+		D222FD62262D7FF600AFA178 /* Clock Cartoon.caf in Resources */ = {isa = PBXBuildFile; fileRef = D222FD60262D7FF600AFA178 /* Clock Cartoon.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -173,6 +178,9 @@
 		D222FC61262BEC1300AFA178 /* Experience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Experience.swift; sourceTree = "<group>"; };
 		D222FD1B262D596F00AFA178 /* Notice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notice.swift; sourceTree = "<group>"; };
 		D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechnicalNote.swift; sourceTree = "<group>"; };
+		D222FD4F262D7D0700AFA178 /* HUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUD.swift; sourceTree = "<group>"; };
+		D222FD59262D7F0E00AFA178 /* Afloat Pad.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Afloat Pad.caf"; sourceTree = "<group>"; };
+		D222FD60262D7FF600AFA178 /* Clock Cartoon.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Clock Cartoon.caf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,6 +330,7 @@
 				5EF2F9AD2054BBF300191409 /* LiveViewController.swift */,
 				5E3196F22061DEA40077BBD7 /* LiveViewSupport.swift */,
 				D222FB82262A8D3700AFA178 /* RealityViewController.swift */,
+				D222FD4F262D7D0700AFA178 /* HUD.swift */,
 				D222FC61262BEC1300AFA178 /* Experience.swift */,
 				D222FC53262BE14F00AFA178 /* Helpers.swift */,
 				D222FC28262BD09400AFA178 /* Speak.swift */,
@@ -395,6 +404,8 @@
 		5EF2F9792054B64800191409 /* PrivateResources */ = {
 			isa = PBXGroup;
 			children = (
+				D222FD59262D7F0E00AFA178 /* Afloat Pad.caf */,
+				D222FD60262D7FF600AFA178 /* Clock Cartoon.caf */,
 				5EF2F97E2054B6E400191409 /* ManifestPlist.strings */,
 				5E551EC42371FC3F00784365 /* Assets.xcassets */,
 			);
@@ -561,7 +572,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				5EF2F97C2054B6E400191409 /* ManifestPlist.strings in Resources */,
+				D222FD5A262D7F0E00AFA178 /* Afloat Pad.caf in Resources */,
 				5E551EC52371FC3F00784365 /* Assets.xcassets in Resources */,
+				D222FD61262D7FF600AFA178 /* Clock Cartoon.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -569,7 +582,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D222FD5B262D7F0E00AFA178 /* Afloat Pad.caf in Resources */,
 				5EA2E3CA2056F35B00416A35 /* LiveViewTestAppLaunchScreen.storyboard in Resources */,
+				D222FD62262D7FF600AFA178 /* Clock Cartoon.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -624,6 +639,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */,
+				D222FD50262D7D0700AFA178 /* HUD.swift in Sources */,
 				D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */,
 				5E3196F32061DEA40077BBD7 /* LiveViewSupport.swift in Sources */,
 				D222FD46262D61D100AFA178 /* Notice.swift in Sources */,

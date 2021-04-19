@@ -10,97 +10,6 @@ import SwiftUI
 import ARKit
 import RealityKit
 
-struct VoiceChanger: View {
-    @ObservedObject
-    var voicing: EnglishSpeaker = .inCharge
-    @State
-    private var showingVoiceChanger: Bool = false
-    var body: some View {
-        Button {
-            showingVoiceChanger = true
-        } label: {
-            Text("Change Voice")
-                .padding()
-        }
-        .actionSheet(isPresented: $showingVoiceChanger) {
-            ActionSheet(title: Text("Choose Voice"), message: nil,
-                        buttons: voicing.voices.map { voice in
-                            return .default(Text(voice.name)) {
-                                voicing.currentVoice = voice
-                            }
-                        })
-        }
-    }
-}
-
-struct HUD: View {
-    @ObservedObject
-    var dataSource: RealityViewController
-
-    private let formatter = NumberFormatter.withDecimalPlaces(exactly: 2)
-
-    var distanceList: some View {
-        ForEach(ARMeshClassification.allCases, id: \.rawValue) { classification in
-            if let pair = dataSource._anchorSummary?.minDistanceToCamera[classification] {
-                HStack {
-                    Text(classification.description)
-                        .fontWeight(.bold)
-                    Spacer()
-                    Text("\(NSNumber(value: pair.inMeters), formatter: formatter) m")
-                        .font(.system(.body, design: .monospaced))
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(dataSource.state.colorForDistance(pair.inMeters)))
-                }
-            }
-        }
-    }
-
-
-    var body: some View {
-        VStack {
-            HStack {
-                Spacer()
-                HStack {
-                    VoiceChanger()
-                    Divider()
-                    Button {
-                        dataSource.resetARSession()
-                    } label: {
-                        Text("Reset Tracking")
-                            .foregroundColor(.red)
-                            .padding()
-                    }
-                }
-                .foregroundColor(.primary)
-                .fixedSize()
-                .background(VisualEffectBlur())
-                .cornerRadius(10)
-                .padding()
-            }
-            Spacer()
-            HStack {
-                Spacer()
-                VStack(alignment: .leading) {
-                    Text("Nearest Distances")
-                        .font(.title)
-                        .padding(.bottom)
-
-                    if dataSource._anchorSummary?.minDistanceToCamera.isEmpty == false {
-                        distanceList
-                    } else {
-                        Text("Detecting...")
-                    }
-                }
-                .fixedSize()
-                .padding()
-                .background(VisualEffectBlur(blurStyle: .systemThinMaterial))
-                .cornerRadius(10)
-                .padding()
-            }
-        }
-    }
-}
-
 public class RealityViewController: UIViewController,
                                     ARSessionDelegate, ARCoachingOverlayViewDelegate,
                                     ObservableObject {
@@ -136,7 +45,26 @@ public class RealityViewController: UIViewController,
     //        arView.scene.addAnchor(entity)
     //        return entity
     //    }()
-    private var previousCenterAnchor: AnchorEntity?
+    private let minDistanceAudioResource = try! AudioFileResource.load(named: "Clock Cartoon.caf",
+                                                                       inputMode: .spatial,
+                                                                       shouldLoop: true)
+    private lazy var minDistanceAnchor: AnchorEntity = {
+        let entity = AnchorEntity(world: [0, 0, 0])
+        let mesh = MeshResource.generateSphere(radius: 0.05)
+        let material = SimpleMaterial(color: .yellow, isMetallic: false)
+        let model = ModelEntity(mesh: mesh, materials: [material])
+        entity.addChild(model)
+        entity.playAudio(minDistanceAudioResource)
+        arView.scene.addAnchor(entity)
+        return entity
+    }()
+    private var previousTextEntity: ModelEntity? = nil
+    private lazy var centerAnchor: AnchorEntity = {
+        let textAnchor = AnchorEntity()
+//        textAnchor.components[]
+        arView.scene.addAnchor(textAnchor)
+        return textAnchor
+    }()
     private var isUpdating = false
     private func updateRaycast() {
         guard let raycastResult = arView.raycast(from: arView.bounds.center,
@@ -155,6 +83,18 @@ public class RealityViewController: UIViewController,
             .map { ARMeshClassification($0.classification) }
 
         func updateTextWithOrientation() {
+            defer {
+                // just update the center point faster
+                var distances = _anchorSummary?.minDistanceToCamera ?? [:]
+                distances[raycastPlaneClassification ?? .none] = (inMeters: raycastDistance,
+                                                                  worldTransform: raycastResult.worldTransform)
+                updateForNearestDistances(distances)
+                // always inform the delegates
+                state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
+                state.didReceiveMinDistanceFromCamera?(distances.mapValues { $0.inMeters })
+            }
+
+            if !state.showDistance { return }
             let textEntity = self.generateText(
                 String(format: "%.1fm", raycastDistance),
                 color: state.colorForDistance(raycastDistance)
@@ -167,19 +107,14 @@ public class RealityViewController: UIViewController,
             var transform = Transform(matrix: raycastResult.worldTransform)
             transform.translation = textPositionInWorldCoordinates
             transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
-            let textAnchor = AnchorEntity(world: transform.matrix)
-            textAnchor.addChild(textEntity)
-            previousCenterAnchor?.removeFromParent()
-            arView.scene.addAnchor(textAnchor)
-            previousCenterAnchor = textAnchor
-            state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
-            // just update the center point faster
-            var distances = _anchorSummary?.minDistanceToCamera.mapValues { $0.inMeters } ?? [:]
-            distances[raycastPlaneClassification ?? .none] = raycastDistance
-            state.didReceiveMinDistanceFromCamera?(distances)
+
+            previousTextEntity?.removeFromParent()
+            previousTextEntity = textEntity
+            centerAnchor.addChild(textEntity)
+            centerAnchor.move(to: transform, relativeTo: nil, duration: 0.1)
         }
 
-        if !isUpdating && state.showDistance {
+        if !isUpdating {
             isUpdating = true
             processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
                 let raycastClassification = raycastPlaneClassification
@@ -200,8 +135,10 @@ public class RealityViewController: UIViewController,
                         ]
                     )
                 }
+
                 DispatchQueue.main.async {
                     self?._anchorSummary = newSummary
+                    self?.updateForNearestDistances(newSummary.minDistanceToCamera)
                     self?.isUpdating = false
                     self?.state.didReceiveMinDistanceFromCamera?(distances)
                 }
@@ -213,13 +150,23 @@ public class RealityViewController: UIViewController,
     // func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
     //     for (classification, point) in distances {
     //         let anchor = self.anchor(forClassification: classification)
-    //         anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
     //     }
     // }
 
+    private func updateForNearestDistances(_ distances: CategorizedDistances) {
+        guard !distances.isEmpty else { return }
+        // we know for sure there's at least an element
+        let closest = distances
+            .sorted { $0.value.inMeters < $1.value.inMeters }
+            .first!
+        minDistanceAnchor.move(to: closest.value.worldTransform, relativeTo: nil,
+                               duration: 0.2, timingFunction: .easeInOut)
+    }
+
+    typealias CategorizedDistances = [ARMeshClassification: (inMeters: Float, worldTransform: simd_float4x4)]
     public struct AnchorSummary {
         let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
-        let minDistanceToCamera: [ARMeshClassification: (inMeters: Float, worldTransform: simd_float4x4)]
+        let minDistanceToCamera: CategorizedDistances
     }
     private func processAllAnchors(
         centerWorldPosition location: SIMD3<Float>,
@@ -305,7 +252,7 @@ public class RealityViewController: UIViewController,
         updateForConfigs()
 
         arView.session.delegate = self
-        // arView.environment.sceneUnderstanding.options = [.occlusion, .physics,]
+        arView.environment.sceneUnderstanding.options = [.occlusion, .receivesLighting]
         arView.renderOptions = [.disablePersonOcclusion, .disableDepthOfField, .disableMotionBlur]
         arView.automaticallyConfigureSession = false
 
@@ -322,9 +269,17 @@ public class RealityViewController: UIViewController,
 
     private func updateForConfigs() {
         if !state.showDistance {
-            previousCenterAnchor?.removeFromParent()
+            previousTextEntity?.removeFromParent()
         }
-        hud.view.isHidden = (state.didReceiveMinDistanceFromCamera == nil)
+        let noHandleMinDistances = (state.didReceiveMinDistanceFromCamera == nil)
+        hud.view.isHidden = noHandleMinDistances
+        if noHandleMinDistances {
+            minDistanceAnchor.stopAllAudio()
+            minDistanceAnchor.removeFromParent()
+        } else {
+            arView.scene.addAnchor(minDistanceAnchor)
+            minDistanceAnchor.playAudio(minDistanceAudioResource)
+        }
 
         if state.showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
@@ -359,19 +314,6 @@ public class RealityViewController: UIViewController,
     internal let _myWorkQueue = DispatchQueue(label: "RealityViewController")
     internal let coachingOverlay = ARCoachingOverlayView()
 
-    //    private var _anchorCache: [ARMeshClassification: AnchorEntity] = [:]
-    //    func anchor(forClassification classification: ARMeshClassification) -> AnchorEntity {
-    //        if let anchor = _anchorCache[classification] {
-    //            return anchor
-    //        } else {
-    //            let anchor = AnchorEntity()
-    //            _anchorCache[classification] = anchor
-    //            arView.scene.addAnchor(anchor)
-    //            anchor.playAudio(try! AudioFileResource.load(named: "80s Back Beat 02.caf", shouldLoop: true))
-    //            return anchor
-    //        }
-    //    }
-
     var arView: ARView {
         return view as! ARView
     }
@@ -379,7 +321,6 @@ public class RealityViewController: UIViewController,
     public override func loadView() {
         self.view = ARView(frame: .zero, cameraMode: .ar,
                            automaticallyConfigureSession: false)
-
     }
 
     private lazy var hud = UIHostingController(rootView: HUD(dataSource: self))
