@@ -29,7 +29,7 @@ viewRealWorld(
                 if distance < 0.4 /* meter */ {
                     return say("terrain, terrain; pull up, pull up")
                 } else if distance < 0.7 /* meter */ {
-                    return say("caution: terrain")
+                    return say("caution: terrain; caution: terrain;")
                 }
             case .ceiling:
                 if distance < 0.25 /* meter */ {
