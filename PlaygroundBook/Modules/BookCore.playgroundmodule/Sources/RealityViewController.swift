@@ -25,6 +25,7 @@ struct HUD: View {
                     Spacer()
                     Text("\(NSNumber(value: pair.inMeters), formatter: formatter) m")
                         .font(.system(.body, design: .monospaced))
+                        .foregroundColor(Color(dataSource.state.colorForDistance(pair.inMeters)))
                 }
             }
         }
@@ -76,7 +77,18 @@ public class RealityViewController: UIViewController,
         var showDistance: Bool = false
         var didReceiveDistanceFromCameraToPointInWorldAtCenterOfView: ((Float) -> Void)? = nil
         var didReceiveMinDistanceFromCamera: (([ARMeshClassification: Float]) -> Void)? = nil
+        var colorForDistance: (Float) -> UIColor = { distance in
+            switch distance {
+            case ...1.4: return UIColor.systemRed
+            case ...1.875: return UIColor.systemOrange
+            case ...2.75: return UIColor.systemGreen
+            case ...3.125: return UIColor.systemTeal
+            case ...3.75: return UIColor.systemBlue
+            default: return UIColor.systemIndigo // ~5 meters
+            }
+        }
     }
+    @Published
     internal var state: State = State() {
         didSet {
             DispatchQueue.main.async(execute: updateForConfigs)
@@ -108,86 +120,64 @@ public class RealityViewController: UIViewController,
         let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
-        func updateTextWithOrientation(_ orientation: Transform) {
-            //            return
-            #warning("TODO: remove X before submission")
+        func updateTextWithOrientation() {
             let textEntity = self.generateText(
-                String(format: "%.1fm\(orientation == cameraTransform ? "X" : "")", raycastDistance),
-                color: {
-                    switch raycastDistance {
-                    case ...1.4: return UIColor.systemRed
-                    case ...1.875: return UIColor.systemOrange
-                    case ...2.75: return UIColor.systemGreen
-                    case ...3.125: return UIColor.systemTeal
-                    case ...3.75: return UIColor.systemBlue
-                    default: return UIColor.systemIndigo // ~5 meters
-                    }
-                }
+                String(format: "%.1fm", raycastDistance),
+                color: state.colorForDistance(raycastDistance)
             )
             // 6. Scale the text depending on the distance,
             // such that it always appears with the same size on screen.
             textEntity.scale = .one * raycastDistance
 
-            // 7. Place the text, facing the transform.
-            var finalTransform = orientation
-            finalTransform.translation = textPositionInWorldCoordinates
-            let textAnchor = AnchorEntity(world: finalTransform.matrix)
+            // 7. Place the text at the raycasted location, somewhat facing the camera
+            var transform = Transform(matrix: raycastResult.worldTransform)
+            transform.translation = textPositionInWorldCoordinates
+            transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
+            let textAnchor = AnchorEntity(world: transform.matrix)
             textAnchor.addChild(textEntity)
             previousCenterAnchor?.removeFromParent()
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
+            state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
             isUpdating = false
         }
 
         processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
-            let raycastClassification: ARMeshClassification = raycastResult.anchor
+            let raycastClassification: ARMeshClassification
+                = raycastResult.anchor
                 .flatMap { $0 as? ARPlaneAnchor }
                 .map { ARMeshClassification($0.classification) }
+                ?? result?.center?.classification
                 ?? .none
             var distances = [raycastClassification: raycastDistance]
+            let newSummary: AnchorSummary
             if let result = result {
                 distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters },
                                 uniquingKeysWith: min)
-                if let center = result.center {
-                    let transform = Transform(matrix: center.worldTransform)
-                    #warning("TODO: make sure text have same orientation as surface")
-                    // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
-                    DispatchQueue.main.async {
-                        self?._anchorSummary = result
-                        //                        self?.updateCategorizedAnchors(result.minDistanceToCamera)
-                        updateTextWithOrientation(transform)
-                    }
-                } else {
-                    DispatchQueue.main.async {
-                        self?._anchorSummary = result
-                        updateTextWithOrientation(cameraTransform)
-                    }
-                }
+                newSummary = result
             } else {
-                DispatchQueue.main.async {
-                    self?._anchorSummary = AnchorSummary(
-                        center: nil,
-                        minDistanceToCamera: [
-                            raycastClassification : (inMeters: raycastDistance,
-                                                     worldTransform: raycastResult.worldTransform)
-                        ]
-                    )
-                    updateTextWithOrientation(cameraTransform)
-                }
+                newSummary = AnchorSummary(
+                    center: nil,
+                    minDistanceToCamera: [
+                        raycastClassification : (inMeters: raycastDistance,
+                                                 worldTransform: raycastResult.worldTransform)
+                    ]
+                )
             }
             DispatchQueue.main.async {
-                self?.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
+                self?._anchorSummary = newSummary
                 self?.state.didReceiveMinDistanceFromCamera?(distances)
             }
         }
+        updateTextWithOrientation()
     }
 
-    //    func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
-    //        for (classification, point) in distances {
-    //            let anchor = self.anchor(forClassification: classification)
-    //            anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
-    //        }
-    //    }
+    // func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
+    //     for (classification, point) in distances {
+    //         let anchor = self.anchor(forClassification: classification)
+    //         anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
+    //     }
+    // }
 
     public struct AnchorSummary {
         let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
@@ -223,6 +213,10 @@ public class RealityViewController: UIViewController,
 
                     // Convert the face's center to world coordinates.
                     var centerLocalTransform = matrix_identity_float4x4
+                    // translationMatrixOf(
+                    //     normal: anchor.geometry.normalOf(faceWithIndex: index),
+                    //     at: geometricCenterOfFace
+                    // )
                     centerLocalTransform.columns.3 = SIMD4<Float>(
                         geometricCenterOfFace.0,
                         geometricCenterOfFace.1,

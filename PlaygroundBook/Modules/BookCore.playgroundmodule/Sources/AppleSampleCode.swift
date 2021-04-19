@@ -11,7 +11,7 @@ import ARKit
 import RealityKit
 
 extension RealityViewController {
-    internal func generateText(_ text: String, color: () -> UIColor) -> ModelEntity {
+    internal func generateText(_ text: String, color: UIColor) -> ModelEntity {
         if let model = _cache[text] {
             model.transform = .identity
             return model.clone(recursive: true)
@@ -20,7 +20,7 @@ extension RealityViewController {
         let lineHeight: CGFloat = 0.05
         let font = MeshResource.Font.systemFont(ofSize: lineHeight)
         let textMesh = MeshResource.generateText(text, extrusionDepth: Float(lineHeight * 0.1), font: font)
-        let textMaterial = UnlitMaterial(color: color())
+        let textMaterial = UnlitMaterial(color: color)
         let model = ModelEntity(mesh: textMesh, materials: [textMaterial])
         // Move text geometry to the left so that its local origin is in the center
         model.position.x -= model.visualBounds(relativeTo: nil).extents.x / 2
