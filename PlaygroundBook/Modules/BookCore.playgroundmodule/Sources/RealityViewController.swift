@@ -10,6 +10,29 @@ import SwiftUI
 import ARKit
 import RealityKit
 
+struct VoiceChanger: View {
+    @ObservedObject
+    var voicing: EnglishSpeaker = .inCharge
+    @State
+    private var showingVoiceChanger: Bool = false
+    var body: some View {
+        Button {
+            showingVoiceChanger = true
+        } label: {
+            Text("Change Voice")
+                .padding()
+        }
+        .actionSheet(isPresented: $showingVoiceChanger) {
+            ActionSheet(title: Text("Choose Voice"), message: nil,
+                        buttons: voicing.voices.map { voice in
+                            return .default(Text(voice.name)) {
+                                voicing.currentVoice = voice
+                            }
+                        })
+        }
+    }
+}
+
 struct HUD: View {
     @ObservedObject
     var dataSource: RealityViewController
@@ -25,24 +48,33 @@ struct HUD: View {
                     Spacer()
                     Text("\(NSNumber(value: pair.inMeters), formatter: formatter) m")
                         .font(.system(.body, design: .monospaced))
+                        .fontWeight(.semibold)
                         .foregroundColor(Color(dataSource.state.colorForDistance(pair.inMeters)))
                 }
             }
         }
     }
 
+
     var body: some View {
         VStack {
             HStack {
                 Spacer()
-                Button {
-                    dataSource.resetARSession()
-                } label: {
-                    Text("Reset Tracking")
-                        .padding()
-                        .background(VisualEffectBlur())
-                        .cornerRadius(10)
+                HStack {
+                    VoiceChanger()
+                    Divider()
+                    Button {
+                        dataSource.resetARSession()
+                    } label: {
+                        Text("Reset Tracking")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
                 }
+                .foregroundColor(.primary)
+                .fixedSize()
+                .background(VisualEffectBlur())
+                .cornerRadius(10)
                 .padding()
             }
             Spacer()

@@ -30,21 +30,41 @@ extension String.StringInterpolation {
     }
 }
 
-public let _synthesizer = AVSpeechSynthesizer()
+public class EnglishSpeaker: ObservableObject {
+    @Published
+    public var currentVoice: AVSpeechSynthesisVoice? = nil
 
-#warning("TODO: offer UI for changing voice")
-private var speakCache: String? = nil
-public func say(
-    _ text: String,
-    using voice: AVSpeechSynthesisVoice? = nil,
-    stopPrevious: Bool = true
-) {
-    guard text != speakCache else { return }
-    speakCache = text
-    let utterance = AVSpeechUtterance(string: text)
-    utterance.voice = voice
-    if _synthesizer.isSpeaking && stopPrevious {
-        _synthesizer.stopSpeaking(at: .word)
+    public let synthesizer = AVSpeechSynthesizer()
+
+    public let voices = AVSpeechSynthesisVoice.speechVoices()
+        // english only
+        .filter { Locale(identifier: $0.language).languageCode == "en" }
+        // sort by quality then by name
+        .sorted {
+            if $0.quality != $1.quality {
+                return $0.quality.rawValue > $1.quality.rawValue
+            } else {
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+        }
+
+    private var speakCache: String? = nil
+
+    public func speak(_ text: String, stopPrevious: Bool = true) {
+        guard text != speakCache else { return }
+        speakCache = text
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = currentVoice
+        if synthesizer.isSpeaking && stopPrevious {
+            synthesizer.stopSpeaking(at: .word)
+        }
+        synthesizer.speak(utterance)
     }
-    _synthesizer.speak(utterance)
+
+    public static let inCharge = EnglishSpeaker()
+    private init() { }
+}
+
+public func say(_ text: String, stopPrevious: Bool = true) {
+    EnglishSpeaker.inCharge.speak(text, stopPrevious: stopPrevious)
 }
