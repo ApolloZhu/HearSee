@@ -8,11 +8,25 @@
 import Foundation
 import AVFoundation
 
-extension String.StringInterpolation {
-    public mutating func appendInterpolation(_ float: Float, decimalPlaces: Int) {
+extension NumberFormatter {
+    static func withDecimalPlaces(_ decimalPlaces: Int) -> NumberFormatter {
         let formatter = NumberFormatter()
         formatter.maximumFractionDigits = decimalPlaces
-        appendLiteral(formatter.string(from: NSNumber(value: float))!)
+        return formatter
+    }
+
+    static func withDecimalPlaces(exactly decimalPlaces: Int) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.minimumFractionDigits = decimalPlaces
+        formatter.maximumFractionDigits = decimalPlaces
+        return formatter
+    }
+}
+
+extension String.StringInterpolation {
+    public mutating func appendInterpolation(_ float: Float, decimalPlaces: Int) {
+        appendLiteral(NumberFormatter.withDecimalPlaces(decimalPlaces)
+                        .string(from: NSNumber(value: float))!)
     }
 }
 

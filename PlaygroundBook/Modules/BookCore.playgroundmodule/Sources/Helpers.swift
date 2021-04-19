@@ -39,3 +39,16 @@ extension ARMeshClassification {
         }
     }
 }
+
+extension ARMeshClassification: CaseIterable {
+    public static let allCases: [ARMeshClassification] = [
+        .wall,
+        .door,
+        .window,
+        .table,
+        .seat,
+        .ceiling,
+        .floor,
+        .none,
+    ]
+}

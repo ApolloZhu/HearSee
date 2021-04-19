@@ -6,21 +6,70 @@
 //
 
 import UIKit
+import SwiftUI
 import ARKit
 import RealityKit
 
-public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
+struct HUD: View {
+    @ObservedObject
+    var dataSource: RealityViewController
+
+    private let formatter = NumberFormatter.withDecimalPlaces(exactly: 2)
+
+    var distanceList: some View {
+        ForEach(ARMeshClassification.allCases, id: \.rawValue) { classification in
+            if let pair = dataSource._anchorSummary?.minDistanceToCamera[classification] {
+                HStack {
+                    Text(classification.description)
+                        .fontWeight(.bold)
+                    Spacer()
+                    Text("\(NSNumber(value: pair.inMeters), formatter: formatter) m")
+                        .font(.system(.body, design: .monospaced))
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                VStack(alignment: .leading) {
+                    Text("Nearest Distances")
+                        .font(.title)
+                        .padding(.bottom)
+
+                    if dataSource._anchorSummary?.minDistanceToCamera.isEmpty == false {
+                        distanceList
+                    } else {
+                        Text("Detecting...")
+                    }
+                }
+                .fixedSize()
+                .padding()
+                .background(VisualEffectBlur(blurStyle: .systemThinMaterial))
+                .cornerRadius(10)
+                .padding()
+            }
+        }
+    }
+}
+
+public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate, ObservableObject {
     internal struct State {
         var showMesh: Bool = false
         var showDistance: Bool = false
-        var didReceiveDistanceFromCameraToPointInWorldAtCenterOfView: (Float) -> Void = { _ in }
-        var didReceiveMinDistanceFromCamera: ([ARMeshClassification: Float]) -> Void = { _ in }
+        var didReceiveDistanceFromCameraToPointInWorldAtCenterOfView: ((Float) -> Void)? = nil
+        var didReceiveMinDistanceFromCamera: (([ARMeshClassification: Float]) -> Void)? = nil
     }
     internal var state: State = State() {
         didSet {
             DispatchQueue.main.async(execute: updateForConfigs)
         }
     }
+    @Published
+    public var _anchorSummary: AnchorSummary? = nil
 
     //    private lazy var minDistanceAnchor: AnchorEntity = {
     //        let entity = AnchorEntity(world: [0, 0, 0])
@@ -35,8 +84,8 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         if isUpdating || !state.showDistance { return }
         isUpdating = true
         guard let raycastResult = arView.raycast(from: arView.bounds.center,
-                                          allowing: .estimatedPlane,
-                                          alignment: .any).first
+                                                 allowing: .estimatedPlane,
+                                                 alignment: .any).first
         else { isUpdating = false; return }
 
         let cameraTransform = arView.cameraTransform
@@ -46,7 +95,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
 
         func updateTextWithOrientation(_ orientation: Transform) {
-//            return
+            //            return
             #warning("TODO: remove X before submission")
             let textEntity = self.generateText(
                 String(format: "%.1fm\(orientation == cameraTransform ? "X" : "")", raycastDistance),
@@ -77,48 +126,56 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         }
 
         processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
-            var distances: [ARMeshClassification: Float]
-            if let anchor = raycastResult.anchor,
-               let planeAnchor = anchor as? ARPlaneAnchor {
-                distances = [.init(planeAnchor.classification): raycastDistance]
-            } else {
-                distances = [.none: raycastDistance]
-            }
+            let raycastClassification: ARMeshClassification = raycastResult.anchor
+                .flatMap { $0 as? ARPlaneAnchor }
+                .map { ARMeshClassification($0.classification) }
+                ?? .none
+            var distances = [raycastClassification: raycastDistance]
             if let result = result {
-                distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters }, uniquingKeysWith: min)
+                distances.merge(result.minDistanceToCamera.mapValues { $0.inMeters },
+                                uniquingKeysWith: min)
                 if let center = result.center {
                     let transform = Transform(matrix: center.worldTransform)
                     #warning("TODO: make sure text have same orientation as surface")
                     // transform.rotation = simd_slerp(transform.rotation, cameraTransform.rotation, 0.5)
                     DispatchQueue.main.async {
-//                        self?.updateCategorizedAnchors(result.minDistanceToCamera)
+                        self?._anchorSummary = result
+                        //                        self?.updateCategorizedAnchors(result.minDistanceToCamera)
                         updateTextWithOrientation(transform)
                     }
                 } else {
                     DispatchQueue.main.async {
+                        self?._anchorSummary = result
                         updateTextWithOrientation(cameraTransform)
                     }
                 }
             } else {
                 DispatchQueue.main.async {
+                    self?._anchorSummary = AnchorSummary(
+                        center: nil,
+                        minDistanceToCamera: [
+                            raycastClassification : (inMeters: raycastDistance,
+                                                     worldTransform: raycastResult.worldTransform)
+                        ]
+                    )
                     updateTextWithOrientation(cameraTransform)
                 }
             }
             DispatchQueue.main.async {
-                self?.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView(raycastDistance)
-                self?.state.didReceiveMinDistanceFromCamera(distances)
+                self?.state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
+                self?.state.didReceiveMinDistanceFromCamera?(distances)
             }
         }
     }
 
-//    func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
-//        for (classification, point) in distances {
-//            let anchor = self.anchor(forClassification: classification)
-//            anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
-//        }
-//    }
+    //    func updateCategorizedAnchors(_ distances: [ARMeshClassification : (inMeters: Float, worldTransform: simd_float4x4)]) {
+    //        for (classification, point) in distances {
+    //            let anchor = self.anchor(forClassification: classification)
+    //            anchor.setTransformMatrix(point.worldTransform, relativeTo: nil)
+    //        }
+    //    }
 
-    private struct AnchorSummary {
+    public struct AnchorSummary {
         let center: (worldTransform: simd_float4x4, classification: ARMeshClassification)?
         let minDistanceToCamera: [ARMeshClassification: (inMeters: Float, worldTransform: simd_float4x4)]
     }
@@ -197,6 +254,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     // MARK: - Life Cycle
     public override func viewDidLoad() {
         super.viewDidLoad()
+        addHUD()
         setupCoachingOverlay()
         updateForConfigs()
 
@@ -220,6 +278,7 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
         if !state.showDistance {
             previousCenterAnchor?.removeFromParent()
         }
+        hud.view.isHidden = (state.didReceiveMinDistanceFromCamera == nil)
 
         if state.showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
@@ -254,18 +313,18 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     internal let _myWorkQueue = DispatchQueue(label: "RealityViewController")
     internal let coachingOverlay = ARCoachingOverlayView()
 
-//    private var _anchorCache: [ARMeshClassification: AnchorEntity] = [:]
-//    func anchor(forClassification classification: ARMeshClassification) -> AnchorEntity {
-//        if let anchor = _anchorCache[classification] {
-//            return anchor
-//        } else {
-//            let anchor = AnchorEntity()
-//            _anchorCache[classification] = anchor
-//            arView.scene.addAnchor(anchor)
-//            anchor.playAudio(try! AudioFileResource.load(named: "80s Back Beat 02.caf", shouldLoop: true))
-//            return anchor
-//        }
-//    }
+    //    private var _anchorCache: [ARMeshClassification: AnchorEntity] = [:]
+    //    func anchor(forClassification classification: ARMeshClassification) -> AnchorEntity {
+    //        if let anchor = _anchorCache[classification] {
+    //            return anchor
+    //        } else {
+    //            let anchor = AnchorEntity()
+    //            _anchorCache[classification] = anchor
+    //            arView.scene.addAnchor(anchor)
+    //            anchor.playAudio(try! AudioFileResource.load(named: "80s Back Beat 02.caf", shouldLoop: true))
+    //            return anchor
+    //        }
+    //    }
 
     var arView: ARView {
         return view as! ARView
@@ -274,6 +333,22 @@ public class RealityViewController: UIViewController, ARSessionDelegate, ARCoach
     public override func loadView() {
         self.view = ARView(frame: .zero, cameraMode: .ar,
                            automaticallyConfigureSession: false)
+
+    }
+
+    private lazy var hud = UIHostingController(rootView: HUD(dataSource: self))
+    func addHUD() {
+        addChild(hud)
+        arView.addSubview(hud.view)
+        hud.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hud.view.centerXAnchor.constraint(equalTo: arView.centerXAnchor),
+            hud.view.centerYAnchor.constraint(equalTo: arView.centerYAnchor),
+            hud.view.widthAnchor.constraint(equalTo: arView.widthAnchor),
+            hud.view.heightAnchor.constraint(equalTo: arView.heightAnchor)
+        ])
+        hud.view.backgroundColor = .clear
+        hud.didMove(toParent: self)
     }
 
     public override var prefersHomeIndicatorAutoHidden: Bool {

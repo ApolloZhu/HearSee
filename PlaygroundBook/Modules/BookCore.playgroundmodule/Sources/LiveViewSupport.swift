@@ -12,8 +12,8 @@ import PlaygroundSupport
 public func getRealWorldView(
     withDistanceMap showMesh: Bool = true,
     withDistanceMeasurement showDistance: Bool = true,
-    onReceiveDistanceUpdate processDistance: @escaping (Float) -> Void = { _ in },
-    onReceiveCategorizedDistanceUpdate processCategorizedDistances: @escaping ([ARMeshClassification: Float]) -> Void = { _ in }
+    onReceiveDistanceUpdate processDistance: ((Float) -> Void)? = nil,
+    onReceiveCategorizedDistanceUpdate processCategorizedDistances: (([ARMeshClassification: Float]) -> Void)? = nil
 ) -> RealityViewController {
     let viewController = RealityViewController()
     viewController.state = .init(
@@ -28,8 +28,8 @@ public func getRealWorldView(
 public func viewRealWorld(
     withDistanceMap showMesh: Bool,
     withDistanceMeasurement showDistance: Bool,
-    onReceiveDistanceUpdate processDistance: @escaping (Float) -> Void = { _ in },
-    onReceiveCategorizedDistanceUpdate processCategorizedDistances: @escaping ([ARMeshClassification: Float]) -> Void = { _ in }
+    onReceiveDistanceUpdate processDistance: ((Float) -> Void)? = nil,
+    onReceiveCategorizedDistanceUpdate processCategorizedDistances: (([ARMeshClassification: Float]) -> Void)? = nil
 ) {
     PlaygroundPage.current.setLiveView(getRealWorldView(
         withDistanceMap: showMesh,

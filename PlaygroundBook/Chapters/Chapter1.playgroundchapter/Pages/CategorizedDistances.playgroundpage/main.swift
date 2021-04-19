@@ -21,7 +21,7 @@ viewRealWorld(
             switch category {
             // for walls, only warns if is too close (25 centimeters).
             case .wall:
-                if distance < 0.25 /* meter */ {
+                if distance < 0.3 /* meter */ {
                     return say("\(distance, decimalPlaces: 1) meter from wall")
                 }
             // for example, someone into aviation could use some jargons.
