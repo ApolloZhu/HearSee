@@ -27,9 +27,9 @@
 		D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */; };
 		D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC53262BE14F00AFA178 /* Helpers.swift */; };
 		D222FC62262BEC1300AFA178 /* Experience.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC61262BEC1300AFA178 /* Experience.swift */; };
-		D222FC7A262BF03A00AFA178 /* Experience.reality in Resources */ = {isa = PBXBuildFile; fileRef = D222FC79262BF03A00AFA178 /* Experience.reality */; };
-		D222FC7B262BF03A00AFA178 /* Experience.reality in Resources */ = {isa = PBXBuildFile; fileRef = D222FC79262BF03A00AFA178 /* Experience.reality */; };
 		D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FC28262BD09400AFA178 /* Speak.swift */; };
+		D222FD45262D61D100AFA178 /* TechnicalNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */; };
+		D222FD46262D61D100AFA178 /* Notice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222FD1B262D596F00AFA178 /* Notice.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -171,7 +171,8 @@
 		D222FC28262BD09400AFA178 /* Speak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Speak.swift; sourceTree = "<group>"; };
 		D222FC53262BE14F00AFA178 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		D222FC61262BEC1300AFA178 /* Experience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Experience.swift; sourceTree = "<group>"; };
-		D222FC79262BF03A00AFA178 /* Experience.reality */ = {isa = PBXFileReference; lastKnownFileType = file; path = Experience.reality; sourceTree = "<group>"; };
+		D222FD1B262D596F00AFA178 /* Notice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notice.swift; sourceTree = "<group>"; };
+		D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechnicalNote.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,13 +318,15 @@
 		5E70679D23678DA00094BDEF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */,
 				5EF2F9AD2054BBF300191409 /* LiveViewController.swift */,
 				5E3196F22061DEA40077BBD7 /* LiveViewSupport.swift */,
 				D222FB82262A8D3700AFA178 /* RealityViewController.swift */,
 				D222FC61262BEC1300AFA178 /* Experience.swift */,
 				D222FC53262BE14F00AFA178 /* Helpers.swift */,
-				D222FBBC262AAD9700AFA178 /* AppleSampleCode.swift */,
 				D222FC28262BD09400AFA178 /* Speak.swift */,
+				D222FD1B262D596F00AFA178 /* Notice.swift */,
+				D222FD2D262D5B1000AFA178 /* TechnicalNote.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -393,7 +396,6 @@
 			isa = PBXGroup;
 			children = (
 				5EF2F97E2054B6E400191409 /* ManifestPlist.strings */,
-				D222FC79262BF03A00AFA178 /* Experience.reality */,
 				5E551EC42371FC3F00784365 /* Assets.xcassets */,
 			);
 			path = PrivateResources;
@@ -560,7 +562,6 @@
 			files = (
 				5EF2F97C2054B6E400191409 /* ManifestPlist.strings in Resources */,
 				5E551EC52371FC3F00784365 /* Assets.xcassets in Resources */,
-				D222FC7A262BF03A00AFA178 /* Experience.reality in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -568,7 +569,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D222FC7B262BF03A00AFA178 /* Experience.reality in Resources */,
 				5EA2E3CA2056F35B00416A35 /* LiveViewTestAppLaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -626,10 +626,12 @@
 				D222FB83262A8D3700AFA178 /* RealityViewController.swift in Sources */,
 				D222FC8A262C0BD200AFA178 /* Speak.swift in Sources */,
 				5E3196F32061DEA40077BBD7 /* LiveViewSupport.swift in Sources */,
+				D222FD46262D61D100AFA178 /* Notice.swift in Sources */,
 				D222FC62262BEC1300AFA178 /* Experience.swift in Sources */,
 				5EF2F9AE2054BBF300191409 /* LiveViewController.swift in Sources */,
 				D222FC54262BE14F00AFA178 /* Helpers.swift in Sources */,
 				D222FBBD262AAD9700AFA178 /* AppleSampleCode.swift in Sources */,
+				D222FD45262D61D100AFA178 /* TechnicalNote.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
