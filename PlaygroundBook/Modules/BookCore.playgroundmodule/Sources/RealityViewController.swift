@@ -151,6 +151,10 @@ public class RealityViewController: UIViewController,
         let raycastDistance = distance(resultWorldPosition, cameraTransform.translation)
         let rayDirection = normalize(resultWorldPosition - cameraTransform.translation)
         let textPositionInWorldCoordinates = resultWorldPosition - (rayDirection * 0.1)
+        let raycastPlaneClassification: ARMeshClassification?
+            = raycastResult.anchor
+            .flatMap { $0 as? ARPlaneAnchor }
+            .map { ARMeshClassification($0.classification) }
 
         func updateTextWithOrientation() {
             let textEntity = self.generateText(
@@ -171,14 +175,15 @@ public class RealityViewController: UIViewController,
             arView.scene.addAnchor(textAnchor)
             previousCenterAnchor = textAnchor
             state.didReceiveDistanceFromCameraToPointInWorldAtCenterOfView?(raycastDistance)
+            // just update the center point faster
+            var distances = _anchorSummary?.minDistanceToCamera.mapValues { $0.inMeters } ?? [:]
+            distances[raycastPlaneClassification ?? .none] = raycastDistance
+            state.didReceiveMinDistanceFromCamera?(distances)
             isUpdating = false
         }
 
         processAllAnchors(centerWorldPosition: resultWorldPosition) { [weak self] result in
-            let raycastClassification: ARMeshClassification
-                = raycastResult.anchor
-                .flatMap { $0 as? ARPlaneAnchor }
-                .map { ARMeshClassification($0.classification) }
+            let raycastClassification = raycastPlaneClassification
                 ?? result?.center?.classification
                 ?? .none
             var distances = [raycastClassification: raycastDistance]
