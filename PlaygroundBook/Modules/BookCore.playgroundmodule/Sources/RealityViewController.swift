@@ -38,22 +38,16 @@ public class RealityViewController: UIViewController,
     @Published
     public var _anchorSummary: AnchorSummary? = nil
 
-    //    private lazy var minDistanceAnchor: AnchorEntity = {
-    //        let entity = AnchorEntity(world: [0, 0, 0])
-    //        let pin = try! Experience.loadPin().pin!
-    //        entity.addChild(pin)
-    //        arView.scene.addAnchor(entity)
-    //        return entity
-    //    }()
     private let minDistanceAudioResource = try! AudioFileResource.load(named: "Clock Cartoon.caf",
                                                                        inputMode: .spatial,
                                                                        shouldLoop: true)
     private lazy var minDistanceAnchor: AnchorEntity = {
-        let entity = AnchorEntity(world: [0, 0, 0])
-        let mesh = MeshResource.generateSphere(radius: 0.05)
-        let material = SimpleMaterial(color: .yellow, isMetallic: false)
-        let model = ModelEntity(mesh: mesh, materials: [material])
-        entity.addChild(model)
+        let entity = AnchorEntity()
+        // let mesh = MeshResource.generateSphere(radius: 0.05)
+        // let material = SimpleMaterial(color: .yellow, isMetallic: false)
+        // let model = ModelEntity(mesh: mesh, materials: [material])
+        let pin = try! Experience.loadPin().pin!
+        entity.addChild(pin)
         entity.playAudio(minDistanceAudioResource)
         arView.scene.addAnchor(entity)
         return entity
