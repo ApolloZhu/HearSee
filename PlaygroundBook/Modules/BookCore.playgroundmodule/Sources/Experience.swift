@@ -10,7 +10,6 @@ import Combine
 
 @available(iOS 13.0, macOS 10.15, *)
 public enum Experience {
-
     public enum LoadRealityFileError: Error {
         case fileNotFound(String)
     }

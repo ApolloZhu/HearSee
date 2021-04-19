@@ -1,7 +1,5 @@
 //
 //  AppleSampleCode.swift
-//  BookCore
-//
 //  These are verbatim/close copy of Apple Sample Code from various projects.
 //
 
