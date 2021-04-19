@@ -2,14 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UserModuleSourceFileToActivate</key>
-	<string>UserModules/UserModule.playgroundmodule/Sources/SharedCode.swift</string>
 	<key>UserModuleSourceFilesToOpen</key>
 	<array>
 		<string>UserModules/UserModule.playgroundmodule/Sources/SharedCode.swift</string>
 	</array>
 	<key>Name</key>
-	<string>ChapterOnePageThreeName</string>
+	<string>ChapterOnePageFourName</string>
 	<key>LiveViewEdgeToEdge</key>
 	<true/>
 	<key>LiveViewMode</key>

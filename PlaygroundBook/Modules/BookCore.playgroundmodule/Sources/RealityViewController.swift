@@ -18,18 +18,7 @@ public class RealityViewController: UIViewController,
         var showDistance: Bool = false
         var didReceiveDistanceFromCameraToPointInWorldAtCenterOfView: ((Float) -> Void)? = nil
         var didReceiveMinDistanceFromCamera: (([ARMeshClassification: Float]) -> Void)? = nil
-        var anchorEntityForMinDistanceFromCamera: () -> AnchorEntity = {
-            let entity = AnchorEntity()
-            // let mesh = MeshResource.generateSphere(radius: 0.05)
-            // let material = SimpleMaterial(color: #colorLiteral(red: 0.4, green: 0.8, blue: 1, alpha: 1), isMetallic: false)
-            // let model = ModelEntity(mesh: mesh, materials: [material])
-            let model = try! Experience.loadPin().pin!
-            entity.addChild(model)
-            entity.playAudio(try! AudioFileResource.load(named: "Clock Cartoon.caf",
-                                                         inputMode: .spatial,
-                                                         shouldLoop: true))
-            return entity
-        }
+        var anchorEntityForMinDistanceFromCamera: () -> AnchorEntity = { AnchorEntity() }
         var colorForDistance: (Float) -> UIColor = { distance in
             switch distance {
             case ...1.4: return UIColor.systemRed

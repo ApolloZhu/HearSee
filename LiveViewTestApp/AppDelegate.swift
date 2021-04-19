@@ -7,6 +7,8 @@
 
 import UIKit
 import SwiftUI
+import RealityKit
+import ARKit
 import PlaygroundSupport
 import LiveViewHost
 import BookCore
@@ -65,6 +67,18 @@ class AppDelegate: LiveViewHost.AppDelegate {
                         break  // otherwise, we don't know what's going on
                     }
                 }
+            },
+            markerForNearestPoint: {
+                let entity = AnchorEntity()
+                // let mesh = MeshResource.generateSphere(radius: 0.05)
+                // let material = SimpleMaterial(color: #colorLiteral(red: 0.4, green: 0.8, blue: 1, alpha: 1), isMetallic: false)
+                // let model = ModelEntity(mesh: mesh, materials: [material])
+                let model = try! Experience.loadPin().pin!
+                entity.addChild(model)
+                entity.playAudio(try! AudioFileResource.load(named: "Clock Cartoon.caf",
+                                                             inputMode: .spatial,
+                                                             shouldLoop: true))
+                return entity
             })
     }
 

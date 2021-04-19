@@ -18,3 +18,9 @@ Contains English localizations of values in Manifest.plist files in the playgrou
 
 "ChapterOnePageThreeName" = "Comfort Zone";
 
+"ChapterOnePageThreeReadyToCopyInstructions" = "You can bring the code you wrote for handling minimum distances over.";
+"ChapterOnePageThreeNotReadyToCopyInstructions" = "Go back to change how you handle the minimum distances?";
+
+"ChapterOnePageFourName" = "Pin it Down";
+
+"ChapterOnePageFiveName" = "Future Directions";
