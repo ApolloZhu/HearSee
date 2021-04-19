@@ -1,8 +1,8 @@
 //
-//  Extensions.swift
+//  AppleSampleCode.swift
 //  BookCore
 //
-//  Created by Apollo Zhu on 4/17/21.
+//  These are verbatim/close copy of Apple Sample Code from various projects.
 //
 
 import SwiftUI

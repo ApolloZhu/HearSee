@@ -32,6 +32,18 @@ struct HUD: View {
 
     var body: some View {
         VStack {
+            HStack {
+                Spacer()
+                Button {
+                    dataSource.resetARSession()
+                } label: {
+                    Text("Reset Tracking")
+                        .padding()
+                        .background(VisualEffectBlur())
+                        .cornerRadius(10)
+                }
+                .padding()
+            }
             Spacer()
             HStack {
                 Spacer()
@@ -56,7 +68,9 @@ struct HUD: View {
     }
 }
 
-public class RealityViewController: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate, ObservableObject {
+public class RealityViewController: UIViewController,
+                                    ARSessionDelegate, ARCoachingOverlayViewDelegate,
+                                    ObservableObject {
     internal struct State {
         var showMesh: Bool = false
         var showDistance: Bool = false

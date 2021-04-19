@@ -2,8 +2,7 @@
 
 Technologies
 
-- RealityKit
-- ARKit
+- RealityKit + ARKit - RayCasting, AudioAnchor?
 - AVFoundation - AVSpeechSynthesizer
 - StringInterpolation
 
