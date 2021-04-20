@@ -1,11 +1,12 @@
 # Hear See
 
-Technologies
-
-- RealityKit + ARKit - RayCasting, AudioAnchor?
-- AVFoundation - AVSpeechSynthesizer
-- StringInterpolation
-
+* Swift Playground Author Template: providing the general structure and development of the playground book.
+* ARKit: for measuring distances through recasting, scene reconstruction, and classification of surfaces
+* RealityKit: for displaying distance measurement, nearest point marker, and background/spatial music
+* RealityComposer: modeling the pin marker used for closest obstacle
+* SwiftUI: rendering additional UI elements, such as the button for changing the voice used for speaking, and the list of nearby point distances
+* AVFoundation (AVSpeechSynthesizer): announcing distances/other messages
+* StringInterpolation + NumberFormatter: custom interpolation allowing for formatting the distances to speak.
 
 #  Playground Book Xcode Project #
 
