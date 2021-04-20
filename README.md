@@ -1,5 +1,7 @@
 # Hear See
 
+> Tell us about the features and technologies you used in your Swift playground.
+
 * Swift Playground Author Template: providing the general structure and development of the playground book.
 * ARKit: for measuring distances through recasting, scene reconstruction, and classification of surfaces
 * RealityKit: for displaying distance measurement, nearest point marker, and background/spatial music
@@ -7,6 +9,18 @@
 * SwiftUI: rendering additional UI elements, such as the button for changing the voice used for speaking, and the list of nearby point distances
 * AVFoundation (AVSpeechSynthesizer): announcing distances/other messages
 * StringInterpolation + NumberFormatter: custom interpolation allowing for formatting the distances to speak.
+
+## Comments
+
+> Is there anything else you would like us to know?
+
+There’s a chance that, under unknown circumstances, the Playground live view will be interrupted during the RealityKit viewing experience. However, the LiveViewTestApp with identical code is confirmed to be working correctly without any issue. Examining the captured stack trace, we can see that the error originated from Metal, despite that not a single line of Metal code is written by me for this submission.
+
+Confused, I reach out to others who are also working on the Swift Student Challenge and using RealityKit, and many have reported similar encounters. In the most extreme case, just adding a plane anchor to the ARView causes the remote process interruption, which shouldn’t happen given how simple the code is.
+
+Therefore, I suspect there might be some internal issue with using RealityKit inside Swift Playgrounds. Nonetheless, this is not a severe issue, so re-running the code for the page after each interruption is highly recommended.
+
+Thank you very much.
 
 #  Playground Book Xcode Project #
 
